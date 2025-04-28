@@ -1,7 +1,7 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
-
+import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFilterState, FilterProvider } from '@/hooks/use-filter-taste'
@@ -123,7 +123,7 @@ function ListingsContent() {
     }
 
     fetchProperties()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [searchParams])
 
   const handleViewMore = () => {
@@ -332,15 +332,15 @@ function ListingsContent() {
   )
 }
 
-import { Suspense } from 'react'
+
 
 export default function ListingsPage() {
   return (
-    <FilterProvider>
-      <Suspense fallback={<div>Loading listings...</div>}>
+    <Suspense fallback={<div>Loading filters...</div>}>
+      <FilterProvider>
         <ListingsContent />
-      </Suspense>
-    </FilterProvider>
+      </FilterProvider>
+    </Suspense>
   )
 }
 
