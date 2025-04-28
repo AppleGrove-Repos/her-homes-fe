@@ -329,10 +329,15 @@ function ListingsContent() {
   )
 }
 
+import { Suspense } from 'react'
+
 export default function ListingsPage() {
   return (
     <FilterProvider>
-      <ListingsContent />
+      <Suspense fallback={<div>Loading listings...</div>}>
+        <ListingsContent />
+      </Suspense>
     </FilterProvider>
   )
 }
+
