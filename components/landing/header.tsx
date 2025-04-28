@@ -38,7 +38,9 @@ export default function Header() {
               className="h-10 w-auto object-contain align-middle"
             />
           </div>
-          <span className="text-base font-medium">Her Homes</span>
+          <span className="text-base font-medium hidden sm:block">
+            Her Homes
+          </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">

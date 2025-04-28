@@ -42,12 +42,12 @@ export default function MobileMenu() {
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="text-black"
+        className="text-black w-16 h-16" // Increased width/height here
       >
         {isOpen ? (
-          <X className="h-6 w-6 transition-transform duration-300 rotate-90" />
+          <X className="h-10 w-10 transition-transform duration-300 rotate-90" />
         ) : (
-          <Menu className="h-6 w-6 transition-transform duration-300" />
+          <Menu className="h-10 w-10 transition-transform duration-300" />
         )}
         <span className="sr-only">Toggle menu</span>
       </Button>
@@ -66,9 +66,9 @@ export default function MobileMenu() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="text-black"
+                className="text-black w-16 h-16"
               >
-                <X className="h-6 w-6" />
+                <X className="h-16 w-16" />
                 <span className="sr-only">Close menu</span>
               </Button>
             </div>
