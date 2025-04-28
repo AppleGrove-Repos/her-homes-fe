@@ -4,15 +4,22 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 import clsx from 'clsx'
+import { useRef } from 'react'
 import {
   motion,
   AnimatePresence,
   useAnimation,
   type Variants,
 } from 'framer-motion'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+gsap.registerPlugin(ScrollTrigger)
+
 
 export default function Hero() {
+  const ref = useRef<HTMLElement>(null)
   const houseImages = [
     '/assets/images/Component 3.png',
     '/assets/images/house-2.png',
@@ -20,8 +27,32 @@ export default function Hero() {
     '/assets/images/house-4.png',
     '/assets/images/house-5.png',
   ]
+  enum PriceFilter {
+    UNDER_10M = '0m-10m',
+    BETWEEN_10M_25M = '10m-25m',
+    BETWEEN_25M_50M = '25m-50m',
+    BETWEEN_50M_100M = '50m-100m',
+    ABOVE_100M = '100m-999m',
+  }
+  useGSAP(
+    () => {
+      gsap.registerPlugin(ScrollTrigger)
 
-  const [currentIndex, setCurrentIndex] = useState(0)
+      const timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: ref.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1,
+        },
+      })
+
+      timeline.from('#hero-img', { scale: 1.3 })
+    },
+    { scope: ref }
+  )
+  
+  // const [currentIndex, setCurrentIndex] = useState(0)
   const router = useRouter()
   const controls = useAnimation()
 
@@ -29,13 +60,12 @@ export default function Hero() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
 
   const priceOptions = [
-    { label: 'Under N10M', value: 'under-10m' },
-    { label: 'N10M - N25M', value: '10m-25m' },
-    { label: 'N25M - N50M', value: '25m-50m' },
-    { label: 'N50M - N100M', value: '50m-100m' },
-    { label: 'Above N100M', value: 'above-100m' },
+    { label: 'Under N10M', value: PriceFilter.UNDER_10M },
+    { label: 'N10M - N25M', value: PriceFilter.BETWEEN_10M_25M },
+    { label: 'N25M - N50M', value: PriceFilter.BETWEEN_25M_50M },
+    { label: 'N50M - N100M', value: PriceFilter.BETWEEN_50M_100M },
+    { label: 'Above N100M', value: PriceFilter.ABOVE_100M },
   ]
-
   const locationOptions = [
     { label: 'Lagos', image: '/assets/images/lagos.png' },
     { label: 'Ibadan', image: '/assets/images/ibadan.png' },
@@ -144,7 +174,7 @@ export default function Hero() {
   }, [controls])
 
   return (
-    <section className="w-full py-8 md:py-12 relative overflow-hidden">
+    <section className="w-full py-8 md:py-12 relative overflow-hidden ref={ref}">
       <motion.div
         className="absolute top-0 left-0 w-1/3 h-2/3 bg-[#F7A192] rounded-br-[30%] -z-10"
         initial={{ opacity: 0, scale: 0.8, x: -100 }}
@@ -343,6 +373,7 @@ export default function Hero() {
                     alt={`House ${page + 1}`}
                     fill
                     sizes="100vw"
+                    id="hero-img"
                     className="object-cover"
                     priority
                   />

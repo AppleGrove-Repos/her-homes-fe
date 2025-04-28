@@ -1,46 +1,46 @@
-// Types for API responses from backend
+// Shared types for the application
 export interface Property {
   id: string
-  title: string
-  description: string
-  price: number
+  propertyType: string
   location: string
-  bedrooms: number
-  bathrooms: number
-  squareFeet: number
+  price: number
+  minMonthlyPayment: number
+  rating: number
   images: string[]
-  features: string[]
-  listingDate: string
-  status: 'available' | 'pending' | 'sold'
+  tags?: string[] // option
 }
 
-export interface MortgageRate {
-  id: string
-  lenderName: string
-  rate: number
-  apr: number
-  term: number
-  type: 'fixed' | 'adjustable'
-  minimumDownPayment: number
-  fees: number
+export interface PropertyListingResponse {
+  data: Property[]
+  total: number
+  page: number
+  limit: number
 }
 
-export interface LoanApplication {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  loanType: 'purchase' | 'refinance' | 'heloc'
-  propertyValue: number
-  downPayment?: number
-  creditScore?: number
-  annualIncome?: number
-  employmentStatus?: string
+export enum PriceFilter {
+  UNDER_10M = '0m-10m',
+  BETWEEN_10M_25M = '10m-25m',
+  BETWEEN_25M_50M = '25m-50m',
+  BETWEEN_50M_100M = '50m-100m',
+  ABOVE_100M = '100m-999m',
 }
 
-// Types for API services
-export interface ApiResponse<T> {
-  data: T
-  status: number
-  message: string
+export interface FilterState {
+  searchQuery: string
+  propertyType: string
+  priceRange: string
+  bedrooms: string
+  location: string
+  moreFilters: string
+}
+export interface PropertyCardProps {
+  id?: string
+  name: string
+  type: string
+  location: string
+  price: string
+  monthlyPayment: string
+  rating: number
+  tags: string[]
+  imageUrl: string
 }

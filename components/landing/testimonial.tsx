@@ -91,7 +91,7 @@ export default function Testimonial() {
         >
           <blockquote className="text-xl md:text-2xl font-medium italic relative">
             <span className="text-[#F7A192] text-3xl absolute -left-6 top-0">
-              "
+              &quot;
             </span>
             <motion.div
               variants={textVariants}
@@ -119,7 +119,7 @@ export default function Testimonial() {
               />
             </motion.div>
             <span className="text-[#F7A192] text-3xl absolute -right-6 bottom-0">
-              "
+              &quot;
             </span>
           </blockquote>
 
