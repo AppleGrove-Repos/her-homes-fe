@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 import { Suspense } from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFilterState, FilterProvider } from '@/hooks/use-filter-taste'
 import PropertyCard from '@/components/applicants/PropertyCard'
@@ -10,13 +10,14 @@ import Header from '@/components/landing/header'
 import Footer from '@/components/landing/footer'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Loader2 } from 'lucide-react'
+import { Search, Loader2, X, Filter } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
 
 interface Property {
   id: string
+  _id?: string
   name: string
   propertyType: string
   location: string
@@ -43,8 +44,25 @@ const priceOptions = [
   { label: 'Above N100M', value: PriceFilter.ABOVE_100M },
 ]
 
+// Debounce function to limit API calls
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
 function ListingsContent() {
-  const { filters, setFilter } = useFilterState()
+  const { filters, setFilter, resetFilters } = useFilterState()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [properties, setProperties] = useState<Property[]>([])
@@ -52,6 +70,18 @@ function ListingsContent() {
   const [error, setError] = useState<string | null>(null)
   const [totalResults, setTotalResults] = useState(0)
   const { isAuthenticated } = useAuth()
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearchQuery = useDebounce(searchQuery, 500) // 500ms debounce
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+
+  // Local state for filter UI values
+  const [localFilters, setLocalFilters] = useState({
+    propertyType: '',
+    priceRange: '',
+    bedrooms: '',
+    location: '',
+    moreFilters: '',
+  })
 
   const houseImages = [
     '/assets/images/listingBG-1.png',
@@ -70,28 +100,68 @@ function ListingsContent() {
     return () => clearInterval(interval)
   }, [page, houseImages.length])
 
+  // Initialize search query from URL params
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('searchQuery')
+    if (urlSearchQuery) {
+      setSearchQuery(urlSearchQuery)
+    }
+  }, [searchParams])
+
   // Function to update URL query params when filters change
-  const applyFilters = () => {
-    const params = new URLSearchParams()
+  const applyFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
 
-    if (filters.propertyType) params.set('propertyType', filters.propertyType)
-    if (filters.priceRange) params.set('priceRange', filters.priceRange)
-    if (filters.bedrooms) params.set('bedrooms', filters.bedrooms)
-    if (filters.location) params.set('location', filters.location)
-    if (filters.moreFilters) params.set('moreFilters', filters.moreFilters)
-    if (filters.searchQuery) params.set('searchQuery', filters.searchQuery)
+    // Use local filter values for the URL
+    if (localFilters.propertyType)
+      params.set('propertyType', localFilters.propertyType)
+    if (localFilters.priceRange)
+      params.set('priceRange', localFilters.priceRange)
+    if (localFilters.bedrooms) params.set('bedrooms', localFilters.bedrooms)
+    if (localFilters.location) params.set('location', localFilters.location)
+    if (localFilters.moreFilters)
+      params.set('moreFilters', localFilters.moreFilters)
+    if (searchQuery) params.set('searchQuery', searchQuery)
 
+    // Update the URL with filters
     router.push(`/listings?${params.toString()}`)
-  }
+
+    // Reset local filters after search is applied
+    setLocalFilters({
+      propertyType: '',
+      priceRange: '',
+      bedrooms: '',
+      location: '',
+      moreFilters: '',
+    })
+
+    // Hide mobile filters after applying
+    setShowMobileFilters(false)
+  }, [localFilters, router, searchParams, searchQuery])
+
+  // Apply live search when debounced search query changes
+  useEffect(() => {
+    if (debouncedSearchQuery !== undefined) {
+      const params = new URLSearchParams(searchParams.toString())
+
+      if (debouncedSearchQuery) {
+        params.set('searchQuery', debouncedSearchQuery)
+      } else {
+        params.delete('searchQuery')
+      }
+
+      router.push(`/listings?${params.toString()}`)
+    }
+  }, [debouncedSearchQuery, router, searchParams])
 
   useEffect(() => {
     const fetchProperties = async () => {
       setLoading(true)
       setError(null)
-    
+
       try {
         const queryParams = new URLSearchParams()
-    
+
         if (searchParams.get('propertyType'))
           queryParams.set('propertyType', searchParams.get('propertyType')!)
         if (searchParams.get('priceRange'))
@@ -102,28 +172,38 @@ function ListingsContent() {
           queryParams.set('location', searchParams.get('location')!)
         if (searchParams.get('searchQuery'))
           queryParams.set('search', searchParams.get('searchQuery')!)
-    
+        if (searchParams.get('moreFilters'))
+          queryParams.set('moreFilters', searchParams.get('moreFilters')!)
+
         queryParams.set('limit', '34')
-    
+
+        console.log('Fetching with params:', queryParams.toString())
+
         const res = await fetch(`/api/listings?${queryParams.toString()}`)
-    
+
         if (!res.ok) throw new Error('Failed to fetch properties.')
-    
+
         const data = await res.json()
-    
+
+        // Check if the API returned an error message
+        if (!data.success && data.message) {
+          throw new Error(data.message)
+        }
+
         setProperties(data.data || [])
-        setTotalResults(data.total ?? data.data.length ?? 0)
+        setTotalResults(data.total ?? data.data?.length ?? 0)
       } catch (err) {
         console.error(err)
-        setError('Failed to load properties.')
-        setProperties([])   // <- Clear properties if error happens
+        setError(
+          err instanceof Error ? err.message : 'Failed to load properties.'
+        )
+        setProperties([]) // <- Clear properties if error happens
       } finally {
         setLoading(false)
       }
     }
 
     fetchProperties()
-   
   }, [searchParams])
 
   const handleViewMore = () => {
@@ -134,12 +214,44 @@ function ListingsContent() {
     }
   }
 
+  const clearSearch = () => {
+    setSearchQuery('')
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('searchQuery')
+    router.push(`/listings?${params.toString()}`)
+  }
+
+  const clearAllFilters = () => {
+    // Reset local filters
+    setLocalFilters({
+      propertyType: '',
+      priceRange: '',
+      bedrooms: '',
+      location: '',
+      moreFilters: '',
+    })
+
+    // Reset search query
+    setSearchQuery('')
+
+    // Reset URL
+    router.push('/listings')
+
+    // Hide mobile filters
+    setShowMobileFilters(false)
+  }
+
+  // Count active filters
+  const activeFilterCount = Object.values(localFilters).filter(
+    (value) => value !== ''
+  ).length
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F1F1F1] overflow-hidden">
       <Header />
 
       {/* Hero Section */}
-      <div className="relative w-full h-[400px] bg-gradient-to-r from-gray-900 to-gray-700 flex items-center justify-center mb-36">
+      <div className="relative w-full h-[300px] md:h-[400px] bg-gradient-to-r from-gray-900 to-gray-700 flex items-center justify-center">
         <div className="absolute inset-0 z-0">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
@@ -159,14 +271,14 @@ function ListingsContent() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <h1 className="text-4xl md:text-5xl text-white font-bold z-10">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl text-white font-bold z-10 px-4 text-center">
           Homes for Sale in Nigeria
         </h1>
       </div>
 
-      {/* Search + Filters */}
-      <div className="absolute top-[400px] left-1/2 transform -translate-x-1/2 w-full max-w-5xl px-2">
-        <div className="bg-white rounded-xl shadow-lg p-6 md:h-[160px]">
+      {/* Search + Filters - Now using relative positioning for better responsiveness */}
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-4 -mt-16 md:-mt-20 mb-24">
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -176,10 +288,19 @@ function ListingsContent() {
           >
             <Input
               placeholder="Search homes by type, location..."
-              className="pr-20 rounded-md h-[35px] bg-white flex-grow"
-              value={filters.searchQuery}
-              onChange={(e) => setFilter('searchQuery', e.target.value)}
+              className="pr-20 rounded-md h-[40px] md:h-[35px] bg-white flex-grow"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-[110px] top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             <Button
               type="submit"
               className="absolute right-1 top-1/2 h-[30px] w-[100px] -translate-y-1/2 bg-[#546B2F] hover:bg-green-800 text-white text-sm"
@@ -189,13 +310,45 @@ function ListingsContent() {
             </Button>
           </form>
 
-          <div className="flex flex-wrap gap-2">
+          {/* Mobile Filter Toggle */}
+          <div className="flex items-center justify-between mb-3 md:hidden">
+            <Button
+              type="button"
+              variant="outline"
+              className="text-sm flex items-center gap-2"
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#546B2F] rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+
+            {activeFilterCount > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-xs text-gray-500"
+                onClick={clearAllFilters}
+              >
+                Clear all
+              </Button>
+            )}
+          </div>
+
+          {/* Desktop Filters - Always visible on md and up */}
+          <div className="hidden md:flex md:flex-wrap md:gap-2">
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={filters.propertyType}
+              value={localFilters.propertyType}
               onChange={(e) => {
-                setFilter('propertyType', e.target.value)
-                applyFilters()
+                setLocalFilters((prev) => ({
+                  ...prev,
+                  propertyType: e.target.value,
+                }))
               }}
             >
               <option value="">Property Type</option>
@@ -206,10 +359,12 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={filters.priceRange}
+              value={localFilters.priceRange}
               onChange={(e) => {
-                setFilter('priceRange', e.target.value)
-                applyFilters()
+                setLocalFilters((prev) => ({
+                  ...prev,
+                  priceRange: e.target.value,
+                }))
               }}
             >
               <option value="">Price Range</option>
@@ -222,10 +377,12 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={filters.bedrooms}
+              value={localFilters.bedrooms}
               onChange={(e) => {
-                setFilter('bedrooms', e.target.value)
-                applyFilters()
+                setLocalFilters((prev) => ({
+                  ...prev,
+                  bedrooms: e.target.value,
+                }))
               }}
             >
               <option value="">Bedrooms</option>
@@ -237,10 +394,12 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={filters.location}
+              value={localFilters.location}
               onChange={(e) => {
-                setFilter('location', e.target.value)
-                applyFilters()
+                setLocalFilters((prev) => ({
+                  ...prev,
+                  location: e.target.value,
+                }))
               }}
             >
               <option value="">Location</option>
@@ -251,10 +410,12 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={filters.moreFilters}
+              value={localFilters.moreFilters}
               onChange={(e) => {
-                setFilter('moreFilters', e.target.value)
-                applyFilters()
+                setLocalFilters((prev) => ({
+                  ...prev,
+                  moreFilters: e.target.value,
+                }))
               }}
             >
               <option value="">More Filters</option>
@@ -262,12 +423,126 @@ function ListingsContent() {
               <option value="gym">Gym</option>
               <option value="security">24/7 Security</option>
             </select>
+            <Button
+              type="button"
+              onClick={clearAllFilters}
+              variant="outline"
+              className="px-3 py-2 text-sm"
+            >
+              Clear All
+            </Button>
           </div>
+
+          {/* Mobile Filters - Only visible when toggled */}
+          {showMobileFilters && (
+            <div className="flex flex-col gap-3 mt-3 md:hidden">
+              <select
+                className="px-3 py-2 border rounded-md text-sm w-full"
+                value={localFilters.propertyType}
+                onChange={(e) => {
+                  setLocalFilters((prev) => ({
+                    ...prev,
+                    propertyType: e.target.value,
+                  }))
+                }}
+              >
+                <option value="">Property Type</option>
+                <option value="Duplex">Duplex</option>
+                <option value="Detached House">Detached House</option>
+                <option value="Apartment">Apartment</option>
+              </select>
+
+              <select
+                className="px-3 py-2 border rounded-md text-sm w-full"
+                value={localFilters.priceRange}
+                onChange={(e) => {
+                  setLocalFilters((prev) => ({
+                    ...prev,
+                    priceRange: e.target.value,
+                  }))
+                }}
+              >
+                <option value="">Price Range</option>
+                {priceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="px-3 py-2 border rounded-md text-sm w-full"
+                value={localFilters.bedrooms}
+                onChange={(e) => {
+                  setLocalFilters((prev) => ({
+                    ...prev,
+                    bedrooms: e.target.value,
+                  }))
+                }}
+              >
+                <option value="">Bedrooms</option>
+                <option value="1+">1+</option>
+                <option value="2+">2+</option>
+                <option value="3+">3+</option>
+                <option value="4+">4+</option>
+              </select>
+
+              <select
+                className="px-3 py-2 border rounded-md text-sm w-full"
+                value={localFilters.location}
+                onChange={(e) => {
+                  setLocalFilters((prev) => ({
+                    ...prev,
+                    location: e.target.value,
+                  }))
+                }}
+              >
+                <option value="">Location</option>
+                <option value="Lagos">Lagos</option>
+                <option value="Abuja">Abuja</option>
+                <option value="Port Harcourt">Port Harcourt</option>
+              </select>
+
+              <select
+                className="px-3 py-2 border rounded-md text-sm w-full"
+                value={localFilters.moreFilters}
+                onChange={(e) => {
+                  setLocalFilters((prev) => ({
+                    ...prev,
+                    moreFilters: e.target.value,
+                  }))
+                }}
+              >
+                <option value="">More Filters</option>
+                <option value="pool">Swimming Pool</option>
+                <option value="gym">Gym</option>
+                <option value="security">24/7 Security</option>
+              </select>
+
+              <div className="flex justify-between gap-2 mt-2">
+                <Button
+                  type="button"
+                  onClick={clearAllFilters}
+                  variant="outline"
+                  className="text-sm flex-1"
+                >
+                  Clear All
+                </Button>
+                <Button
+                  type="button"
+                  onClick={applyFilters}
+                  className="text-sm bg-[#546B2F] hover:bg-green-800 flex-1"
+                >
+                  Apply Filters
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Property Listings */}
-      <div className="flex-grow py-6 px-4">
+      <div className="flex-grow py-4 px-4 md:py-6">
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-[#546B2F]" />
@@ -276,51 +551,51 @@ function ListingsContent() {
         ) : error ? (
           <div className="text-center py-10">
             <p className="text-red-500">{error}</p>
+            <Button onClick={clearAllFilters} className="mt-4 bg-[#5D0F1D]">
+              Clear Filters
+            </Button>
           </div>
         ) : properties.length === 0 ? (
           <div className="text-center py-10">
             <p>No properties found matching your criteria.</p>
-            <Button
-              onClick={() => router.push('/listings')}
-              className="mt-4 bg-[#5D0F1D]"
-            >
+            <Button onClick={clearAllFilters} className="mt-4 bg-[#5D0F1D]">
               Clear Filters
             </Button>
           </div>
         ) : (
           <>
-          <div className="max-w-7xl mx-auto mb-6 px-2 text-gray-700">
-              <h2 className="text-lg font-semibold">
+            <div className="max-w-7xl mx-auto mb-4 md:mb-6 px-2 text-gray-700">
+              <h2 className="text-base md:text-lg font-semibold">
                 {properties.length > 0
                   ? `Showing ${properties.length} of ${totalResults} properties`
                   : 'No properties found'}
               </h2>
             </div>
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                id={property.id}
-                name={property.name}
-                type={property.propertyType}
-                location={property.location}
-                price={`₦${property.price.toLocaleString()}`}
-                monthlyPayment={`₦${property.minMonthlyPayment.toLocaleString()}`}
-                rating={property.rating}
-                tags={property.tags || []}
-                imageUrl={
-                  property.images.length > 0
-                    ? property.images[0]
-                    : '/placeholder.jpg'
-                }
-              />
-            ))}
-          </div>
+            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {properties.map((property) => (
+                <PropertyCard
+                  key={property.id || property._id}
+                  id={property.id || property._id || ''}
+                  name={property.name}
+                  type={property.propertyType}
+                  location={property.location}
+                  price={`₦${property.price.toLocaleString()}`}
+                  monthlyPayment={`₦${property.minMonthlyPayment.toLocaleString()}`}
+                  rating={property.rating}
+                  tags={property.tags || []}
+                  imageUrl={
+                    property.images && property.images.length > 0
+                      ? property.images[0]
+                      : '/placeholder.jpg'
+                  }
+                />
+              ))}
+            </div>
           </>
         )}
 
         {/* View More Button */}
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-6 md:mt-8">
           <Button className="bg-[#5D0F1D]" onClick={handleViewMore}>
             View More
           </Button>
@@ -332,8 +607,6 @@ function ListingsContent() {
   )
 }
 
-
-
 export default function ListingsPage() {
   return (
     <Suspense fallback={<div>Loading filters...</div>}>
@@ -343,4 +616,3 @@ export default function ListingsPage() {
     </Suspense>
   )
 }
-

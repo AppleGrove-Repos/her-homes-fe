@@ -85,7 +85,7 @@ export default function Footer() {
                       <li key={j}>
                         <Link
                           href="#"
-                          className="text-sm text-white/80 hover:text-[#546B2F]"
+                          className="text-sm text-white/80 hover:text-[#5a1523]"
                         >
                           {item}
                         </Link>
@@ -108,7 +108,7 @@ export default function Footer() {
                       <li key={j}>
                         <Link
                           href="#"
-                          className="text-sm text-white/80 hover:text-[#546B2F]"
+                          className="text-sm text-white/80 hover:text-[#5a1523]"
                         >
                           {item}
                         </Link>
@@ -131,7 +131,7 @@ export default function Footer() {
                       <li key={j}>
                         <Link
                           href="#"
-                          className="text-sm text-white/80 hover:text-[#546B2F]"
+                          className="text-sm text-white/80 hover:text-[#5a1523]"
                         >
                           {item}
                         </Link>

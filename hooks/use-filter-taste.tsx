@@ -106,6 +106,9 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
+    // Log the filters being applied
+    console.log('Applying filters from context:', params.toString())
+
     // Update URL with filters
     const queryString = params.toString()
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`)

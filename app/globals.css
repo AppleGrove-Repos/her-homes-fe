@@ -4,6 +4,7 @@
 
 
 
+
 @layer base {
   :root {
 
@@ -131,6 +132,13 @@
 *::-webkit-scrollbar-thumb {
   background-color: #64111F;
   border-radius: 10px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
 *::-webkit-scrollbar-track {

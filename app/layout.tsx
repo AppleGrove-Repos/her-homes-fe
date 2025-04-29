@@ -8,9 +8,9 @@ const inter = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'Her Homes | Real Estate Investment Brand ',
+  title: 'Her Homes | Real Estate ',
   description:
-    'HerHomes inspires women to build wealth on their own terms together.',
+    'Helping individuals and families move into homes they love—with payment plans that work..',
 }
 
 export default function RootLayout({
@@ -20,6 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body className={inter.className}>{children}</body>
     </html>
   )
