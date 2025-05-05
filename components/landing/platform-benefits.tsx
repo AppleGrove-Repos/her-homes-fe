@@ -17,7 +17,7 @@ export default function PlatformBenefits() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:-mb-96 p-8"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:-mb-64 p-8"
           >
             <h2 className="md:text-4xl font-extrabold md:w-[400px]">
               Unlock Your Path to Homeownership with Our Streamlined Platform
@@ -65,7 +65,7 @@ export default function PlatformBenefits() {
                   </span>
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button className="bg-[#64111F] text-white hover:bg-white/90 md:p-8 rounded-[15px]">
+                  <Button className="bg-[#64111F] text-white hover:bg-white/90 hover:text-black md:p-8 rounded-[15px]">
                     Sign Up
                   </Button>
                   <Button

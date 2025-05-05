@@ -1,31 +1,35 @@
+'use client'
+
+import type React from 'react'
+
 import Image from 'next/image'
-import { Heart, Star } from 'lucide-react'
+import { Star, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/use-auth'
 
 interface PropertyCardProps {
-  id?: string
-  name:string
+  id: string
+  name: string
   type: string
   location: string
   price: string
   monthlyPayment: string
   rating: number
-  tags: string[]
+  tags?: string[]
   imageUrl: string
 }
 
-function PropertyCard({
-  id= '1',
+export default function PropertyCard({
+  id,
   name,
   type,
   location,
   price,
   monthlyPayment,
   rating,
-  tags,
+  tags = [],
   imageUrl,
 }: PropertyCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
@@ -39,8 +43,14 @@ function PropertyCard({
 
   const handleCardClick = () => {
     // Navigate to property details page
-    router.push(`/listings/${id}`)
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/user/listings/${id}&action=view-more`)
+      return
+    }
+
+    router.push(`/user/listings/${id}`)
   }
+
 
   const handleActionClick = (action: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card click when clicking buttons
@@ -63,17 +73,18 @@ function PropertyCard({
         router.push(`/user/listings/${id}`)
         break
       default:
-        router.push(`/listings/${id}`)
+        router.push(`/listing/${id}`)
     }
   }
+
   return (
     <div
-      className="bg-white rounded-2xl shadow-lg shadow-white w-full max-w-sm mx-auto p-4 transition-transform hover:scale-105 duration-300"
+      className="bg-white rounded-2xl shadow-lg shadow-white w-full max-w-sm mx-auto p-4 transition-transform hover:scale-105 duration-300 cursor-pointer"
       onClick={handleCardClick}
     >
       {/* Image Section */}
       <div className="relative mb-4">
-        <div className="rounded-2xl overflow-hidden  shadow-md">
+        <div className="rounded-2xl overflow-hidden shadow-md">
           <Image
             src={imageUrl || '/placeholder.svg'}
             alt={type}
@@ -90,7 +101,7 @@ function PropertyCard({
         >
           <Heart
             className={`h-5 w-5${
-              isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
+              isFavorite ? ' fill-red-500 text-red-500' : ' text-gray-400'
             }`}
           />
         </button>
@@ -151,7 +162,7 @@ function PropertyCard({
             Contact Agent
           </Button>
           <Button
-            className="bg-[#7C0A02] hover:bg-[#600000] text-white text-sm "
+            className="bg-[#7C0A02] hover:bg-[#600000] text-white text-sm"
             onClick={(e) => handleActionClick('mortgage', e)}
           >
             Apply for Mortgage
@@ -161,5 +172,3 @@ function PropertyCard({
     </div>
   )
 }
-
-export default PropertyCard

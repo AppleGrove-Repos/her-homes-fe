@@ -6,6 +6,7 @@ import Testimonial from '@/components/landing/testimonial'
 import PlatformBenefits from '@/components/landing/platform-benefits'
 import Footer from '@/components/landing/footer'
 import Header from '@/components/landing/header'
+
 // import Features from '@/components/landing/features'
 // import CallToAction from '@/components/landing/call-to-action'
 

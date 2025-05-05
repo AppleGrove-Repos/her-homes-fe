@@ -1,6 +1,8 @@
 import type { Metadata } from 'next/types'
 import { Manrope } from 'next/font/google'
 import './globals.css'
+import { Providers } from './providers'
+
 
 const inter = Manrope({
   subsets: ['latin'],
@@ -23,7 +25,9 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }

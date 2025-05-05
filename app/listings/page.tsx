@@ -14,18 +14,27 @@ import { Search, Loader2, X, Filter } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
+import {
+  useGetPropertyListings,
+  type PropertyFilterParams,
+} from '@/hooks/api/usePropertyApi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import LoadingSpinner from '@/components/loading-spinner'
 
-interface Property {
-  id: string
-  _id?: string
-  name: string
-  propertyType: string
-  location: string
-  price: number
-  minMonthlyPayment: number
-  rating: number
-  images: string[]
-  tags?: string[]
+// Create a client
+const queryClient = new QueryClient()
+
+// Wrapper component with QueryClientProvider
+export default function ListingsPage() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<LoadingSpinner />}>
+        <FilterProvider>
+          <ListingsContent />
+        </FilterProvider>
+      </Suspense>
+    </QueryClientProvider>
+  )
 }
 
 enum PriceFilter {
@@ -65,7 +74,6 @@ function ListingsContent() {
   const { filters, setFilter, resetFilters } = useFilterState()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [totalResults, setTotalResults] = useState(0)
@@ -83,6 +91,9 @@ function ListingsContent() {
     moreFilters: '',
   })
 
+  // Build filter params for API
+  const [filterParams, setFilterParams] = useState<PropertyFilterParams>({})
+
   const houseImages = [
     '/assets/images/listingBG-1.png',
     '/assets/images/listingBG-2.png',
@@ -90,6 +101,11 @@ function ListingsContent() {
     '/assets/images/listingBG-4.png',
   ]
   const [[page, direction], setPage] = useState([0, 0])
+
+  // Use React Query to fetch property listings
+  const { data: propertyResponse, isLoading } =
+    useGetPropertyListings(filterParams)
+  const properties = propertyResponse?.data || []
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -106,6 +122,15 @@ function ListingsContent() {
     if (urlSearchQuery) {
       setSearchQuery(urlSearchQuery)
     }
+
+    // Initialize local filters from URL params
+    setLocalFilters({
+      propertyType: searchParams.get('propertyType') || '',
+      priceRange: searchParams.get('priceRange') || '',
+      bedrooms: searchParams.get('bedrooms') || '',
+      location: searchParams.get('location') || '',
+      moreFilters: searchParams.get('moreFilters') || '',
+    })
   }, [searchParams])
 
   // Function to update URL query params when filters change
@@ -115,25 +140,41 @@ function ListingsContent() {
     // Use local filter values for the URL
     if (localFilters.propertyType)
       params.set('propertyType', localFilters.propertyType)
+    else params.delete('propertyType')
+
     if (localFilters.priceRange)
       params.set('priceRange', localFilters.priceRange)
+    else params.delete('priceRange')
+
     if (localFilters.bedrooms) params.set('bedrooms', localFilters.bedrooms)
+    else params.delete('bedrooms')
+
     if (localFilters.location) params.set('location', localFilters.location)
+    else params.delete('location')
+
     if (localFilters.moreFilters)
       params.set('moreFilters', localFilters.moreFilters)
+    else params.delete('moreFilters')
+
     if (searchQuery) params.set('searchQuery', searchQuery)
+    else params.delete('searchQuery')
 
     // Update the URL with filters
     router.push(`/listings?${params.toString()}`)
 
-    // Reset local filters after search is applied
-    setLocalFilters({
-      propertyType: '',
-      priceRange: '',
-      bedrooms: '',
-      location: '',
-      moreFilters: '',
-    })
+    // Update filter params for API
+    const apiFilters: PropertyFilterParams = {}
+    if (localFilters.propertyType)
+      apiFilters.propertyType = localFilters.propertyType
+    if (localFilters.priceRange) apiFilters.priceRange = localFilters.priceRange
+    if (localFilters.bedrooms) apiFilters.bedrooms = localFilters.bedrooms
+    if (localFilters.location) apiFilters.location = localFilters.location
+    if (localFilters.moreFilters)
+      apiFilters.moreFilters = localFilters.moreFilters
+    if (searchQuery) apiFilters.search = searchQuery
+
+    apiFilters.limit = 34
+    setFilterParams(apiFilters)
 
     // Hide mobile filters after applying
     setShowMobileFilters(false)
@@ -151,59 +192,40 @@ function ListingsContent() {
       }
 
       router.push(`/listings?${params.toString()}`)
+
+      // Update filter params for API
+      setFilterParams((prev) => ({
+        ...prev,
+        search: debouncedSearchQuery || undefined,
+      }))
     }
   }, [debouncedSearchQuery, router, searchParams])
 
+  // Update total results when data changes
   useEffect(() => {
-    const fetchProperties = async () => {
-      setLoading(true)
-      setError(null)
-
-      try {
-        const queryParams = new URLSearchParams()
-
-        if (searchParams.get('propertyType'))
-          queryParams.set('propertyType', searchParams.get('propertyType')!)
-        if (searchParams.get('priceRange'))
-          queryParams.set('priceRange', searchParams.get('priceRange')!)
-        if (searchParams.get('bedrooms'))
-          queryParams.set('bedrooms', searchParams.get('bedrooms')!)
-        if (searchParams.get('location'))
-          queryParams.set('location', searchParams.get('location')!)
-        if (searchParams.get('searchQuery'))
-          queryParams.set('search', searchParams.get('searchQuery')!)
-        if (searchParams.get('moreFilters'))
-          queryParams.set('moreFilters', searchParams.get('moreFilters')!)
-
-        queryParams.set('limit', '34')
-
-        console.log('Fetching with params:', queryParams.toString())
-
-        const res = await fetch(`/api/listings?${queryParams.toString()}`)
-
-        if (!res.ok) throw new Error('Failed to fetch properties.')
-
-        const data = await res.json()
-
-        // Check if the API returned an error message
-        if (!data.success && data.message) {
-          throw new Error(data.message)
-        }
-
-        setProperties(data.data || [])
-        setTotalResults(data.total ?? data.data?.length ?? 0)
-      } catch (err) {
-        console.error(err)
-        setError(
-          err instanceof Error ? err.message : 'Failed to load properties.'
-        )
-        setProperties([]) // <- Clear properties if error happens
-      } finally {
-        setLoading(false)
-      }
+    if (propertyResponse) {
+      setTotalResults(propertyResponse.total || properties.length || 0)
     }
+  }, [propertyResponse, properties.length])
 
-    fetchProperties()
+  // Initial load of filters from URL
+  useEffect(() => {
+    const apiFilters: PropertyFilterParams = {}
+    if (searchParams.get('propertyType'))
+      apiFilters.propertyType = searchParams.get('propertyType')!
+    if (searchParams.get('priceRange'))
+      apiFilters.priceRange = searchParams.get('priceRange')!
+    if (searchParams.get('bedrooms'))
+      apiFilters.bedrooms = searchParams.get('bedrooms')!
+    if (searchParams.get('location'))
+      apiFilters.location = searchParams.get('location')!
+    if (searchParams.get('searchQuery'))
+      apiFilters.search = searchParams.get('searchQuery')!
+    if (searchParams.get('moreFilters'))
+      apiFilters.moreFilters = searchParams.get('moreFilters')!
+
+    apiFilters.limit = 34
+    setFilterParams(apiFilters)
   }, [searchParams])
 
   const handleViewMore = () => {
@@ -219,6 +241,13 @@ function ListingsContent() {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('searchQuery')
     router.push(`/listings?${params.toString()}`)
+
+    // Update filter params for API
+    setFilterParams((prev) => {
+      const newFilters = { ...prev }
+      delete newFilters.search
+      return newFilters
+    })
   }
 
   const clearAllFilters = () => {
@@ -236,6 +265,9 @@ function ListingsContent() {
 
     // Reset URL
     router.push('/listings')
+
+    // Reset filter params for API
+    setFilterParams({ limit: 34 })
 
     // Hide mobile filters
     setShowMobileFilters(false)
@@ -543,7 +575,7 @@ function ListingsContent() {
 
       {/* Property Listings */}
       <div className="flex-grow py-4 px-4 md:py-6">
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-[#546B2F]" />
             <span className="ml-2">Loading properties...</span>
@@ -604,15 +636,5 @@ function ListingsContent() {
 
       <Footer />
     </div>
-  )
-}
-
-export default function ListingsPage() {
-  return (
-    <Suspense fallback={<div>Loading filters...</div>}>
-      <FilterProvider>
-        <ListingsContent />
-      </FilterProvider>
-    </Suspense>
   )
 }

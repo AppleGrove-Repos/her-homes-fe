@@ -44,7 +44,7 @@ export default function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="#" className="text-sm font-medium hover:text-[#e6a287]">
+          <Link href="/listings" className="text-sm font-medium hover:text-[#e6a287]">
             Browse Listings
           </Link>
           <Link href="#" className="text-sm font-medium hover:text-[#e6a287]">

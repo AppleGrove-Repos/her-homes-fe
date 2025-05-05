@@ -8,7 +8,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
-
+  const navLinks = [
+    { text: 'Browse Listings', href: '/listing' },
+    { text: 'Apply for Financing', href: '/financing' },
+    { text: 'Contact Us', href: '/contact' },
+  ]
   const overlayVariants = {
     hidden: { opacity: 0, y: -20 },
     visible: {
@@ -74,19 +78,17 @@ export default function MobileMenu() {
             </div>
 
             <nav className="flex flex-col items-center gap-6 p-4">
-              {['Browse Listings', 'Apply for Financing', 'Contact Us'].map(
-                (text, index) => (
-                  <motion.div key={index} variants={itemVariants}>
-                    <Link
-                      href="#"
-                      className="text-lg font-medium hover:text-[#e6a287] text-black/90"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {text}
-                    </Link>
-                  </motion.div>
-                )
-              )}
+              {navLinks.map(({ text, href }, index) => (
+                <motion.div key={index} variants={itemVariants}>
+                  <Link
+                    href={href}
+                    className="text-lg font-medium hover:text-[#e6a287] text-black/90"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {text}
+                  </Link>
+                </motion.div>
+              ))}
 
               <motion.div variants={itemVariants} className="w-full">
                 <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md w-full mt-4">
