@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { Suspense } from 'react'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useFilterState, FilterProvider } from '@/hooks/use-filter-taste'
+import { useFilterState, FilterProvider } from '@/lib/hooks/use-filter-taste'
 import PropertyCard from '@/components/applicants/PropertyCard'
 import Header from '@/components/landing/header'
 import Footer from '@/components/landing/footer'
@@ -13,11 +13,11 @@ import { Button } from '@/components/ui/button'
 import { Search, Loader2, X, Filter } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/hooks/use-auth'
 import {
   useGetPropertyListings,
   type PropertyFilterParams,
-} from '@/hooks/api/usePropertyApi'
+} from '@/lib/hooks/api/usePropertyApi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import LoadingSpinner from '@/components/loading-spinner'
 

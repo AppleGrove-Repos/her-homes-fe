@@ -56,9 +56,11 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md text-sm hidden md:inline-flex">
-            Sign Up
-          </Button>
+          <Link href="/signup" passHref legacyBehavior>
+            <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md text-sm hidden md:inline-flex">
+              Sign Up
+            </Button>
+          </Link>
           <MobileMenu />
         </div>
       </div>

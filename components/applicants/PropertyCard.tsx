@@ -7,7 +7,7 @@ import { Star, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/hooks/use-auth'
 
 interface PropertyCardProps {
   id: string
@@ -50,7 +50,6 @@ export default function PropertyCard({
 
     router.push(`/user/listings/${id}`)
   }
-
 
   const handleActionClick = (action: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card click when clicking buttons

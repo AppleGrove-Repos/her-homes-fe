@@ -1,7 +1,7 @@
 'use client'
 
 import RQProvider from './reactQuery.provider'
-import { AuthProvider } from '@/hooks/use-auth'
+import { AuthProvider } from '@/lib/hooks/use-auth'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (

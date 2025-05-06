@@ -1,4 +1,4 @@
-import { http } from '@/lib/config/axios.config'
+import { https } from '@/lib/config/axios.config'
 import { errorHandler } from '@/lib/utils/error'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -55,7 +55,7 @@ export const useGetProperty = (propertyId: string) => {
     queryFn: async () => {
       try {
         // Direct API call without authentication check
-        const response = await http.get<ApiResponse<Property>>(
+        const response = await https.get<ApiResponse<Property>>(
           `/listing/${propertyId}`
         )
         return response.data
@@ -95,7 +95,7 @@ export const useGetPropertyListings = (filters?: PropertyFilterParams) => {
         }
 
         const queryString = queryParams.toString()
-        const response = await http.get<ApiResponse<Property[]>>(
+        const response = await https.get<ApiResponse<Property[]>>(
           `/listing${queryString ? `?${queryString}` : ''}`
         )
         return response.data
@@ -114,7 +114,7 @@ export const useGetPropertyFilters = () => {
     queryKey: ['propertyFilters'],
     queryFn: async () => {
       try {
-        const response = await http.get<ApiResponse<any>>('/listing/filters')
+        const response = await https.get<ApiResponse<any>>('/listing/filters')
         return response.data
       } catch (error) {
         errorHandler(error)
@@ -130,7 +130,7 @@ export const useSaveProperty = () => {
   return useMutation({
     mutationFn: async ({ propertyId }: { propertyId: string }) => {
       try {
-        const response = await http.post<ApiResponse<any>>('/user/favorites', {
+        const response = await https.post<ApiResponse<any>>('/user/favorites', {
           propertyId,
         })
         toast.success('Property saved to favorites')
@@ -148,7 +148,7 @@ export const useRemoveFromFavorites = () => {
   return useMutation({
     mutationFn: async ({ propertyId }: { propertyId: string }) => {
       try {
-        const response = await http.delete<ApiResponse<any>>(
+        const response = await https.delete<ApiResponse<any>>(
           `/user/favorites/${propertyId}`
         )
         toast.success('Property removed from favorites')
@@ -172,7 +172,7 @@ export const useContactAgent = () => {
       message: string
     }) => {
       try {
-        const response = await http.post<ApiResponse<any>>('/user/contact', {
+        const response = await https.post<ApiResponse<any>>('/user/contact', {
           propertyId,
           message,
         })
@@ -197,7 +197,7 @@ export const useApplyForMortgage = () => {
       formData: any
     }) => {
       try {
-        const response = await http.post<ApiResponse<any>>(
+        const response = await https.post<ApiResponse<any>>(
           `/user/mortgage/${propertyId}`,
           formData
         )

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { http } from '@/lib/config/axios.config'
+import { https } from '@/lib/config/axios.config'
 
 // GET handler
 export async function GET(
@@ -11,7 +11,7 @@ export async function GET(
   if (nextauth.includes('init-google')) {
     try {
       const role = request.nextUrl.searchParams.get('role') || 'applicant'
-      const response = await http.get(`/auth/init-google?role=${role}`)
+      const response = await https.get(`/auth/init-google?role=${role}`)
       return NextResponse.json(response.data)
     } catch (error: any) {
       return NextResponse.json(
@@ -23,7 +23,7 @@ export async function GET(
 
   if (nextauth.includes('google') && nextauth.includes('redirect')) {
     try {
-      const response = await http.get('/auth/google/redirect')
+      const response = await https.get('/auth/google/redirect')
       const role = response.data?.user?.role
       const redirectUrl =
         role === 'developer' ? '/developer/dashboard' : '/user/dashboard'
@@ -54,7 +54,7 @@ export async function POST(
   if (nextauth.includes('signin')) {
     try {
       const { email, password, phoneNumber } = await request.json()
-      const response = await http.post('/auth/signin', {
+      const response = await https.post('/auth/signin', {
         email,
         password,
         phoneNumber,
@@ -74,7 +74,7 @@ export async function POST(
   if (nextauth.includes('session') && nextauth.includes('refresh')) {
     try {
       const { refreshToken } = await request.json()
-      const response = await http.post('/auth/session/refresh', {
+      const response = await https.post('/auth/session/refresh', {
         refreshToken,
       })
       return NextResponse.json(response.data)

@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useRouter } from 'next/navigation'
-import { http } from '@/lib/config/axios.config'
+import { https } from '@/lib/config/axios.config'
 import toast from 'react-hot-toast'
 
 // Define user types
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await http.get('/user/me')
+        const response = await https.get('/user')
         if (response.data?.success) {
           setUser(response.data.data)
         }
@@ -72,14 +72,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      const response = await http.post('/auth/signin', {
+      const response = await https.post('/auth/signin', {
         email,
         password,
       })
 
       if (response.data?.success) {
         // Get user data
-        const userResponse = await http.get('/user/me')
+        const userResponse = await https.get('/user')
         setUser(userResponse.data.data)
 
         // Show success message
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loginWithGoogle = async () => {
     try {
       // Initialize Google login with applicant role
-      const response = await http.get('/auth/init-google?role=applicant')
+      const response = await https.get('/auth/init-google?role=applicant')
 
       if (response.data?.url) {
         // Redirect to Google auth URL
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signup = async (name: string, email: string, password: string) => {
     setIsLoading(true)
     try {
-      const response = await http.post('/auth/signup', {
+      const response = await https.post('/auth/signup', {
         name,
         email,
         password,
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Logout function
   const logout = async () => {
     try {
-      await http.post('/auth/logout')
+      await https.post('/auth/logout')
       setUser(null)
       router.push('/')
       toast.success('Logged out successfully')
@@ -157,9 +157,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Refresh session
   const refreshSession = async () => {
     try {
-      await http.post('/auth/session/refresh')
+      await https.post('/auth/session/refresh')
       // Get updated user data
-      const userResponse = await http.get('/user/me')
+      const userResponse = await https.get('/user')
       setUser(userResponse.data.data)
     } catch (error) {
       // If refresh fails, log out the user
