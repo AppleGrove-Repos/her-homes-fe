@@ -131,7 +131,7 @@ export default function Footer() {
                       <li key={j}>
                         <Link
                           href="#"
-                          className="text-sm text-white/80 hover:text-[#5a1523]"
+                          className="text-sm text-white/80 hover:text-[#fff]"
                         >
                           {item}
                         </Link>
