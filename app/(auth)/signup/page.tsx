@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 import RoleSelection from '@/components/auth/role-selection'
 import ApplicantSignupForm from '@/components/auth/applicant-signup-form'
 import DeveloperSignupForm from '@/components/auth/developer-signup-form'
-import type { UserRole } from '@/lib/hooks/use-auth'
+import type { UserRole } from '@/lib/types/auth'
 
 export default function SignupPage() {
   const [step, setStep] = useState<'role-selection' | 'form'>('role-selection')
@@ -68,7 +68,10 @@ export default function SignupPage() {
           </Link>
         </motion.header>
 
-        <motion.div className="max-w-md mx-auto w-full" variants={itemVariants}>
+        <motion.div
+          className="max-w-md mx-auto w-full ml-[4px]"
+          variants={itemVariants}
+        >
           <motion.h1
             className="text-3xl font-bold mb-2"
             variants={itemVariants}

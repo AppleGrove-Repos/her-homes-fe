@@ -1,13 +1,9 @@
 import type { Metadata } from 'next/types'
-import { Manrope } from 'next/font/google'
+import { sora } from '@/lib/utils/fonts'
 import './globals.css'
-import { Providers } from '../lib/providers'
+import Providers from '@/lib/providers/reactQuery.provider'
 
-const manrope = Manrope({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-manrope', // Optional: allows you to use it as a CSS variable
-})
+
 
 export const metadata: Metadata = {
   title: 'Her Homes | Real Estate',
@@ -17,23 +13,22 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
   },
   // Optional: Add Open Graph metadata
-  openGraph: {
-    title: 'Her Homes | Real Estate',
-    description:
-      'Helping individuals and families move into homes they love—with payment plans that work.',
-    url: 'https://herhomes.com',
-    siteName: 'Her Homes',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Her Homes',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
+  // openGraph: {
+  //   title: 'Her Homes | Real Estate',
+  //   description:
+  //     'Helping individuals and families move into homes they love—with payment plans that work.',
+  //   siteName: 'Her Homes',
+  //   images: [
+  //     {
+  //       url: '/og-image.jpg',
+  //       width: 1200,
+  //       height: 630,
+  //       alt: 'Her Homes',
+  //     },
+  //   ],
+  //   locale: 'en_US',
+  //   type: 'website',
+  // },
 }
 
 export default function RootLayout({
@@ -43,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={manrope.className}>
+      <body className={`${sora.className} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

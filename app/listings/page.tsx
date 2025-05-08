@@ -13,11 +13,11 @@ import { Button } from '@/components/ui/button'
 import { Search, Loader2, X, Filter } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '@/lib/hooks/use-auth'
+import { useAuth } from '@/lib/services/use-auth-mynobrain'
 import {
   useGetPropertyListings,
   type PropertyFilterParams,
-} from '@/lib/hooks/api/usePropertyApi'
+} from '@/lib/hooks/usePropertyApi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import LoadingSpinner from '@/components/loading-spinner'
 
@@ -25,18 +25,21 @@ import LoadingSpinner from '@/components/loading-spinner'
 const queryClient = new QueryClient()
 
 // Wrapper component with QueryClientProvider
+import { AuthProvider } from '@/lib/services/use-auth-mynobrain'
+
 export default function ListingsPage() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Suspense fallback={<LoadingSpinner />}>
-        <FilterProvider>
-          <ListingsContent />
-        </FilterProvider>
-      </Suspense>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<LoadingSpinner />}>
+          <FilterProvider>
+            <ListingsContent />
+          </FilterProvider>
+        </Suspense>
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
-
 enum PriceFilter {
   UNDER_10M = '0m-10m',
   BETWEEN_10M_25M = '10m-25m',

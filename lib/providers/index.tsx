@@ -1,12 +1,12 @@
-'use client'
+// 'use client'
 
-import RQProvider from './reactQuery.provider'
-import { AuthProvider } from '@/lib/hooks/use-auth'
+// import RQProvider from './reactQuery.provider'
+// import { AuthProvider } from '@/lib/services/use-auth'
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <RQProvider>
-      <AuthProvider>{children}</AuthProvider>
-    </RQProvider>
-  )
-}
+// export function Providers({ children }: { children: React.ReactNode }) {
+//   return (
+//     <RQProvider>
+//       <AuthProvider>{children}</AuthProvider>
+//     </RQProvider>
+//   )
+// }

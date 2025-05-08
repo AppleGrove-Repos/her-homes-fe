@@ -22,12 +22,12 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import Header from '@/components/landing/header'
 import Footer from '@/components/landing/footer'
-import { useAuth } from '@/lib/hooks/use-auth'
+import { useAuth } from '@/lib/services/use-auth-mynobrain'
 import {
   useGetProperty,
   useSaveProperty,
   useRemoveFromFavorites,
-} from '@/lib/hooks/api/usePropertyApi'
+} from '@/lib/hooks/usePropertyApi'
 import toast from 'react-hot-toast'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 

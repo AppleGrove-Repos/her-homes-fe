@@ -59,7 +59,7 @@ export default function Testimonial() {
   }, [isInView, controls])
 
   return (
-    <section className="w-full py-16 md:py-24 bg-[#fdf0ed] relative mb-[-300px]">
+    <section className="w-full py-16 md:py-24 bg-[#fdf0ed] relative md:mb-[-300px]">
       <div className="absolute -top-[200px] -left-[60px] w-[400px] h-72 z-0 pointer-events-none filter blur-lg">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
           <path

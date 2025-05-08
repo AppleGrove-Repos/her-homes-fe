@@ -141,7 +141,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(false)
     }
   }
-
   // Logout function
   const logout = async () => {
     try {

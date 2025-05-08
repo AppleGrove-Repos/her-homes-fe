@@ -6,51 +6,64 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useAuth } from '@/lib/hooks/use-auth'
-import { Button } from '@/components/ui/button'
+import { useAuth } from '@/lib/store/auth.store'
+import  Button  from '@/components/common/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { LoginType } from '@/lib/types/auth'
+import { useMutation } from '@tanstack/react-query'
+import { loginUser } from '@/lib/services/auth.service'
 import { Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+// import { FaRegEye, FaRegEyeSlash } from 'react-icons/fa'
+import { useForm } from 'react-hook-form'
 import Header from '@/components/landing/header'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
-  const { login, loginWithGoogle, isLoading } = useAuth()
-  const router = useRouter()
+  
   const searchParams = useSearchParams()
 
   // Get redirect URL from query params if available
-  const redirectUrl = searchParams.get('redirect') || '/user/dashboard'
-  //   const action = searchParams.get('action') || ''
+  const router = useRouter()
+  const { fetchUser, setToken } = useAuth()
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+    watch,
+  } = useForm<LoginType>({
+    defaultValues: {
+      role: 'User',
+    },
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const { mutateAsync: _signIn, isPending: _signingIn } = useMutation({
+    mutationKey: ['auth', 'sign-in'],
+    mutationFn: loginUser,
+    onSuccess() {
+      toast.success('Signed in successfully')
+      router.push('/dashboard')
+    },
+  })
 
-    if (!email || !password) {
-      toast.error('Please enter both email and password')
-      return
-    }
-
-    try {
-      await login(email, password)
-      router.push(redirectUrl)
-    } catch (error) {
-      // Error is handled in the login function
-      console.error('Login error:', error)
-    }
+  const submit = async (e: LoginType) => {
+    const data = await _signIn(e)
+    setToken(data?.access_token as string)
+    fetchUser()
   }
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle()
-      // Redirect happens in the loginWithGoogle function
-    } catch (error) {
-      console.error('Google login error:', error)
-    }
-  }
+
+  // const handleGoogleLogin = async () => {
+  //   try {
+  //     await loginWithGoogle()
+  //     // Redirect happens in the loginWithGoogle function
+  //   } catch (error) {
+  //     console.error('Google login error:', error)
+  //   }
+  // }
 
   return (
     <div className="flex min-h-screen flex-col bg-white overflow-hidden">
@@ -75,7 +88,7 @@ export default function Login() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(submit)} className="space-y-6">
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-medium">
                   Email
@@ -130,17 +143,12 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-[#7C0A02] hover:bg-[#600000]"
-                disabled={isLoading}
+                loading={_signingIn}
+                fullWidth
+                className="w-full text-white text-sm bg-[#7C0A02] hover:bg-[#600000]"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  'Log in'
-                )}
+                {' '}
+                <>Log in</>
               </Button>
             </form>
 
@@ -157,16 +165,17 @@ export default function Login() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full mt-4 flex items-center justify-center"
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
+                fullWidth
+                className="w-full text-sm small mt-4 flex items-center justify-center"
+                // onClick={handleGoogleLogin}
+                // disabled={isLoading}
               >
                 <Image
                   src="/assets/images/google.svg"
                   alt="Google"
                   width={20}
                   height={20}
-                  className="mr-2"
+                  className="mr-2 inline-block small"
                 />
                 Login with Google
               </Button>

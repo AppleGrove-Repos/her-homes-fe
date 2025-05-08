@@ -1,8 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import type { UserRole } from '@/lib/hooks/use-auth'
-import { cn } from '@/lib/utils'
+import type { UserRole } from '@/lib/types/auth'
+import { cn } from '@/lib/utils/utils'
+// import { useRouter } from 'next/navigation'
 
 interface RoleSelectionProps {
   selectedRole: UserRole | null
@@ -23,6 +24,7 @@ export default function RoleSelection({
       transition: { duration: 0.4 },
     },
   }
+  // const router = useRouter()
 
   return (
     <motion.div
@@ -44,14 +46,14 @@ export default function RoleSelection({
           Choose Your Role
         </motion.h2>
 
-        <div className="space-y-3">
+        <div className="space-y-5">
           <motion.button
             type="button"
             className={cn(
               'w-full text-left p-4 border rounded-lg flex items-center gap-3',
               selectedRole === 'applicant'
-                ? 'border-[#7D1F2C] bg-[#7D1F2C]/5'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-[#546B2F] bg-[#546B2F] text-white'
+                : 'border-gray-400 hover:border-gray-300'
             )}
             onClick={() => onRoleSelect('applicant')}
             variants={roleVariants}
@@ -61,14 +63,12 @@ export default function RoleSelection({
             <div
               className={cn(
                 'w-5 h-5 rounded-full border flex items-center justify-center',
-                selectedRole === 'applicant'
-                  ? 'border-[#7D1F2C]'
-                  : 'border-gray-400'
+                selectedRole === 'applicant' ? 'border-[#ffff]' : 'border-white'
               )}
             >
               {selectedRole === 'applicant' && (
                 <motion.div
-                  className="w-3 h-3 rounded-full bg-[#7D1F2C]"
+                  className="w-3 h-3 rounded-full bg-[#fff]"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.2 }}
@@ -77,7 +77,12 @@ export default function RoleSelection({
             </div>
             <div>
               <span className="font-medium">Home Seeker</span>
-              <span className="text-gray-500 ml-2">
+              <span
+                className={cn(
+                  'text-gray-500 ml-2',
+                  selectedRole === 'applicant' ? 'text-white' : 'text-gray-500'
+                )}
+              >
                 – Find and finance your dream home
               </span>
             </div>
@@ -88,8 +93,8 @@ export default function RoleSelection({
             className={cn(
               'w-full text-left p-4 border rounded-lg flex items-center gap-3',
               selectedRole === 'developer'
-                ? 'border-[#7D1F2C] bg-[#7D1F2C]/5'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-[#546B2F] bg-[#546B2F] text-white'
+                : 'border-gray-400 hover:border-gray-300'
             )}
             onClick={() => onRoleSelect('developer')}
             variants={roleVariants}
@@ -100,13 +105,13 @@ export default function RoleSelection({
               className={cn(
                 'w-5 h-5 rounded-full border flex items-center justify-center',
                 selectedRole === 'developer'
-                  ? 'border-[#7D1F2C]'
+                  ? 'border-white'
                   : 'border-gray-400'
               )}
             >
               {selectedRole === 'developer' && (
                 <motion.div
-                  className="w-3 h-3 rounded-full bg-[#7D1F2C]"
+                  className="w-3 h-3 rounded-full bg-white"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.2 }}
@@ -115,7 +120,12 @@ export default function RoleSelection({
             </div>
             <div>
               <span className="font-medium">Developer</span>
-              <span className="text-gray-500 ml-2">
+              <span
+                className={cn(
+                  'text-gray-500 ml-2',
+                  selectedRole === 'developer' ? 'text-white' : 'text-gray-500'
+                )}
+              >
                 – List, manage, and sell properties
               </span>
             </div>
@@ -129,7 +139,7 @@ export default function RoleSelection({
           'w-full py-3 px-4 rounded-md font-medium transition-colors',
           selectedRole
             ? 'bg-[#7D1F2C] text-white hover:bg-[#6a1a25]'
-            : 'bg-gray-400 text-white cursor-not-allowed'
+            : 'bg-[#7D1F2C] text-white cursor-not-allowed'
         )}
         onClick={onContinue}
         disabled={!selectedRole}

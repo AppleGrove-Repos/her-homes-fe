@@ -239,7 +239,7 @@ export default function Hero() {
                           className={clsx(
                             'text-xs h-8 rounded-md w-full',
                             selectedPrice === option.value
-                              ? 'bg-[#546B2F] text-white pointer-events-none'
+                              ? 'bg-[#546B2F]  text-white pointer-events-none'
                               : 'hover:bg-[#546B2F] hover:text-white'
                           )}
                           onClick={() => setSelectedPrice(option.value)}
@@ -264,7 +264,7 @@ export default function Hero() {
                             'text-xs h-8 rounded-md w-full',
                             selectedPrice === option.value
                               ? 'bg-[#546B2F] text-white pointer-events-none'
-                              : 'hover:bg-[#546B2F] hover:text-white'
+                              : 'hover:bg-[#546B2F]  hover:text-white'
                           )}
                           onClick={() => setSelectedPrice(option.value)}
                         >
@@ -291,7 +291,7 @@ export default function Hero() {
                           className={clsx(
                             'relative overflow-hidden text-white text-[10px] hover:text-[#546B2F] h-8 rounded-md px-4 py-8 w-full',
                             selectedLocation === option.label &&
-                              'border-2 border-[#546B2F] pointer-events-none'
+                              'border-4 border-[#546B2F] pointer-events-none'
                           )}
                           onClick={() => setSelectedLocation(option.label)}
                         >
@@ -319,7 +319,7 @@ export default function Hero() {
                           className={clsx(
                             'relative overflow-hidden text-white hover:text-[#546B2F] text-[10px] h-8 rounded-md px-4 py-8 w-full',
                             selectedLocation === option.label &&
-                              'border-2 border-[#546B2F] pointer-events-none'
+                              'border-4 border-[#546B2F] pointer-events-none'
                           )}
                           onClick={() => setSelectedLocation(option.label)}
                         >

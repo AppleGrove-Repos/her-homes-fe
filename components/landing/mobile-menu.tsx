@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const navLinks = [
-    { text: 'Browse Listings', href: '/listing' },
+    { text: 'Browse Listings', href: '/listings' },
     { text: 'Apply for Financing', href: '/financing' },
     { text: 'Contact Us', href: '/contact' },
   ]
