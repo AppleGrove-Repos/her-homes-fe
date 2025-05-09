@@ -1,54 +1,78 @@
-import { create } from 'zustand';
-import { User } from '../types/auth';
-import { persist } from 'zustand/middleware';
-import { getUser } from '../services/auth.service';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { getCurrentUser, logoutUser } from '../services/auth.service'
 
-type AuthStoreState = {
-  user?: User | undefined;
-  accessToken?: string;
-};
+interface User {
+  id: string
+  name: string
+  email: string
+  role: 'developer' | 'applicant'
+  profilePicture?: string
+}
 
-type AuthStoreActions = {
-  fetchUser(): void;
-  resetUser(): void;
-  setToken(accessToken: string): void;
-};
+interface AuthState {
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  setUser: (user: User | null) => void
+  setToken: (token: string) => void
+  fetchUser: () => Promise<void>
+  logout: () => void
+}
 
-type AuthStore = AuthStoreState & AuthStoreActions;
-
-export const useAuth = create<AuthStore>()(
+export const useAuth = create<AuthState>()(
   persist(
-    (set) => ({
-      user: undefined,
-      async fetchUser() {
+    (set, get) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+
+      setToken: (token) => set({ token }),
+
+      fetchUser: async () => {
         try {
-          const user = await getUser();
+          set({ isLoading: true })
+          const userData = await getCurrentUser()
 
-          console.log(user);
-
-          set({ user });
-        } catch {
-          set({ user: undefined });
+          if (userData) {
+            set({
+              user: userData,
+              isAuthenticated: true,
+              isLoading: false,
+            })
+          } else {
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+            })
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error)
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          })
         }
       },
-      setToken(accessToken) {
-        set({ accessToken });
-      },
-      resetUser() {
-        set({ user: undefined, accessToken: undefined });
+
+      logout: () => {
+        logoutUser()
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+        })
       },
     }),
     {
-      name: 'user-store',
-      storage: {
-        setItem: (name, value) =>
-          sessionStorage.setItem(name, JSON.stringify(value)),
-        getItem: (name) =>
-          sessionStorage.getItem(name)
-            ? JSON.parse(sessionStorage.getItem(name)!)
-            : null,
-        removeItem: (name) => sessionStorage.removeItem(name),
-      },
+      name: 'auth-storage',
+      partialize: (state) => ({ token: state.token }),
     }
   )
-);
+)

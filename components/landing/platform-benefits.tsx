@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 export default function PlatformBenefits() {
   return (
@@ -65,9 +66,12 @@ export default function PlatformBenefits() {
                   </span>
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button className="bg-[#64111F] text-white hover:bg-white/90 hover:text-black md:p-8 rounded-[15px]">
-                    Sign Up
-                  </Button>
+                  <Link href="/signup" passHref legacyBehavior>
+                    <Button className="bg-[#64111F] text-white hover:bg-white/90 hover:text-black md:p-8 rounded-[15px]">
+                      Sign Up
+                    </Button>
+                  </Link>
+
                   <Button
                     variant="outline"
                     className="text-white border-white hover:bg-white/20 md:p-8 rounded-[15px] bg-transparent"

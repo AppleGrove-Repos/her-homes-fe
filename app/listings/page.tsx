@@ -233,12 +233,22 @@ function ListingsContent() {
 
   const handleViewMore = () => {
     if (!isAuthenticated) {
-      router.push(`/login?redirect=/user/listings`)
+      router.push(`/login?redirect=/listings&action=view-more`)
     } else {
-      router.push('/user/listings')
+      router.push('/listings')
     }
   }
-
+  const handlePropertyClick = (propertyId: string) => {
+    if (!isAuthenticated) {
+      // Use the same path format as in PropertyCard for consistency
+      router.push(
+        `/login?redirect=/user/listings/${propertyId}&action=view-more`
+      )
+    } else {
+      // Update this path to match as well
+      router.push(`/user/listings/${propertyId}`)
+    }
+  }
   const clearSearch = () => {
     setSearchQuery('')
     const params = new URLSearchParams(searchParams.toString())
@@ -623,6 +633,7 @@ function ListingsContent() {
                       ? property.images[0]
                       : '/placeholder.jpg'
                   }
+                  onClick={() => handlePropertyClick(property.id)}
                 />
               ))}
             </div>

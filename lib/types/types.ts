@@ -50,7 +50,36 @@ export interface PropertyCardProps {
   tags: string[]
   imageUrl: string
 }
-export interface AddProperty {
+
+export interface User {
+  _id: string
+  name: string
+  email: string
+  profilePicture?: string
+  role: 'developer' | 'admin' | 'user'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  user: User
+  token: string
+}
+
+export interface Notification {
+  _id: string
+  message: string
+  read: boolean
+  createdAt: string
+}
+
+// Renamed to match the schema exactly
+export interface Property {
   _id: string
   name: string
   description: string
@@ -63,12 +92,9 @@ export interface AddProperty {
   status: 'pending' | 'approved' | 'rejected'
   createdAt: string
   updatedAt: string
-  images?: string[]
-  video?: string
-  amenities?: string[]
-  listingType?: 'sale' | 'rent' | 'lease'
 }
 
+// Renamed to match the schema exactly
 export interface CreatePropertyDto {
   name: string
   description: string
@@ -79,11 +105,6 @@ export interface CreatePropertyDto {
   minDownPaymentPercent: number
   minMonthlyPayment: number
   status?: 'pending' | 'approved' | 'rejected'
-  // New fields
-  images?: string[] | File[]
-  video?: string | File
-  amenities?: string[]
-  listingType?: 'sale' | 'rent' | 'lease'
 }
 
 export interface SearchProperties {
@@ -92,10 +113,4 @@ export interface SearchProperties {
   search?: string
   propertyType?: string
   status?: string
-  // New search parameters
-  amenities?: string[]
-  listingType?: string
-  minPrice?: number
-  maxPrice?: number
-  bedrooms?: number
 }

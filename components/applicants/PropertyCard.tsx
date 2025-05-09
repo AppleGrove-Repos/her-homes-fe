@@ -19,6 +19,7 @@ interface PropertyCardProps {
   rating: number
   tags?: string[]
   imageUrl: string
+  onClick?: () => void // Added onClick property
 }
 
 export default function PropertyCard({
@@ -31,6 +32,7 @@ export default function PropertyCard({
   rating,
   tags = [],
   imageUrl,
+  onClick,
 }: PropertyCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const router = useRouter()

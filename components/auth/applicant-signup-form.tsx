@@ -102,7 +102,7 @@ export default function ApplicantSignupForm() {
       // Redirect to verify email page
       // Example in developer-signup-form.tsx or applicant-signup-form.tsx
       router.push(
-        `/account/verify-email?email=${encodeURIComponent(
+        `/account/verify?email=${encodeURIComponent(
           formData.email
         )}&role=${formData.role}`
       )

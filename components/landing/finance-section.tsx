@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-
+import Link from 'next/link'
 export default function FinanceSection() {
   return (
     <section className="w-full py-16 md:py-24 relative">
@@ -25,9 +25,11 @@ export default function FinanceSection() {
             Complete a simple application and get approved for a plan that fits
             your lifestyle and budget.
           </p>
-          <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md">
-            Apply for financing
-          </Button>
+          <Link href="/applicant/apply-for-financing" passHref legacyBehavior>
+            <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md">
+              Apply for financing
+            </Button>
+          </Link>
         </motion.div>
       </div>
     </section>

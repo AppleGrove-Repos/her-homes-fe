@@ -38,6 +38,42 @@ export default function DeveloperSignupForm() {
 
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    console.log('Selected file:', file) // Debugging
+
+    if (!file) return
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      console.log('FormData:', formData) // Debugging
+
+      const response = await fetch(
+        'https://api.cloudinary.com/v1_1/your_cloud_name/image/upload',
+        {
+          method: 'POST',
+          body: formData,
+        }
+      )
+
+      const data = await response.json()
+      console.log('Upload response:', data) // Debugging
+
+      if (data.secure_url) {
+        setFormData((prev) => ({
+          ...prev,
+          companyLogo: data.secure_url,
+        }))
+        toast.success('Logo uploaded successfully!')
+      } else {
+        throw new Error('Failed to upload logo')
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      toast.error('Unable to upload resource to cloud. Please try again.')
+    }
+  }
   // Update form data
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -104,7 +140,7 @@ export default function DeveloperSignupForm() {
       toast.success('')
       // Example in developer-signup-form.tsx or applicant-signup-form.tsx
       router.push(
-        `/account/verify-email?email=${encodeURIComponent(formData.email)}&role=${
+        `/account/verify?email=${encodeURIComponent(formData.email)}&role=${
           formData.role
         }`
       )
@@ -292,10 +328,9 @@ export default function DeveloperSignupForm() {
               <Input
                 id="companyLogo"
                 name="companyLogo"
-                type="url"
-                value={formData.companyLogo}
-                onChange={handleChange}
-                placeholder="https://example.com/logo.png"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileChange(e)}
               />
             </div>
             <div className="flex justify-between mt-4">

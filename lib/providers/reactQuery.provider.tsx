@@ -6,17 +6,18 @@ import { ModalProvider } from '../contexts/modal-context'
 import { Toaster as SonnerToaster } from 'sonner'
 import { useEffect } from 'react'
 import { useTheme } from '../store/global.store'
-import { useAuth } from '../store/auth.store'
+import { useAuth} from '../store/auth.store'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {},
   },
 })
-
 const Providers = ({ children }: React.PropsWithChildren) => {
   const { isDark: isDarkMode } = useTheme()
-  const { fetchUser, user, accessToken } = useAuth()
+  const fetchUser = useAuth((state) => state.fetchUser) // Correctly access Zustand state
+  const user = useAuth((state) => state.user)
+  const accessToken = useAuth((state) => state.token)
 
   const styleOptions = isDarkMode
     ? {

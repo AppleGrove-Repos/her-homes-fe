@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function WhyHerHomes() {
   return (
     <section className="w-full py-16 md:py-24 relative">
-        
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">
           Why Her Homes?
@@ -20,9 +20,11 @@ export default function WhyHerHomes() {
               match your familys needs and preferences through trusted
               developers.
             </p>
-            <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md">
-              Browse Listings
-            </Button>
+            <Link href="/listings">
+              <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md">
+                Browse Listings
+              </Button>
+            </Link>
           </div>
 
           <div>

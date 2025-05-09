@@ -47,7 +47,7 @@ export default function Header() {
           <Link href="/listings" className="text-sm font-medium hover:text-[#e6a287]">
             Browse Listings
           </Link>
-          <Link href="#" className="text-sm font-medium hover:text-[#e6a287]">
+          <Link href="/applicant/apply-for-financing" className="text-sm font-medium hover:text-[#e6a287]">
             Apply for Financing
           </Link>
           <Link href="#" className="text-sm font-medium hover:text-[#e6a287]">
