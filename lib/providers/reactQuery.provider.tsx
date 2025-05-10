@@ -17,7 +17,7 @@ const Providers = ({ children }: React.PropsWithChildren) => {
   const { isDark: isDarkMode } = useTheme()
   const fetchUser = useAuth((state) => state.fetchUser) // Correctly access Zustand state
   const user = useAuth((state) => state.user)
-  const accessToken = useAuth((state) => state.token)
+  // const accessToken = useAuth((state) => state.token)
 
   const styleOptions = isDarkMode
     ? {
@@ -35,12 +35,6 @@ const Providers = ({ children }: React.PropsWithChildren) => {
       document.documentElement.classList.remove('dark')
     }
   }, [isDarkMode])
-
-  useEffect(() => {
-    if (!user && accessToken) {
-      fetchUser()
-    }
-  }, [])
 
   return (
     <QueryClientProvider client={queryClient}>

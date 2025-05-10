@@ -9,29 +9,42 @@ import Link from 'next/link'
 import Button from '@/components/common/button'
 import BackButton from '@/components/common/button/back-button'
 import { Input } from '@/components/ui/input'
-import { MailAnimation } from '@/components/animations/mail-animations'
 import { Mail } from 'lucide-react'
+import { forgotPassword } from '@/lib/services/auth.service'
+import toast from 'react-hot-toast'
+import { WritingAnimation } from '@/components/animations/writing-animations'
 
-export default function Login() {
+export default function ForgotPassword() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [_signingIn, setSigningIn] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSigningIn(true)
-    // Simulate API call or call your API here
-    setTimeout(() => {
-      setSigningIn(false)
+    setIsLoading(true)
+    setErrorMessage(null)
+
+    try {
+      await forgotPassword(email)
+      setIsLoading(false)
       setEmailSent(true)
-    }, 1000)
+      toast.success('Password reset link sent to your email')
+    } catch (error: any) {
+      setIsLoading(false)
+      setErrorMessage(
+        error.message || 'Failed to send reset email. Please try again.'
+      )
+      toast.error(
+        error.message || 'Failed to send reset email. Please try again.'
+      )
+    }
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-white overflow-hidden">
       <div className="flex min-h-screen overflow-hidden items-center">
-        {/* Left side - Login form */}
+        {/* Left side - Form */}
         <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8">
           <div className="w-full max-w-md">
             {/* Only show header and tagline if emailSent is false */}
@@ -42,9 +55,27 @@ export default function Login() {
                   Forgot your password?
                 </h1>
                 <p className="text-gray-600 mt-9">
-                  Don’t know your password? Reset it after confirming your email
+                  Don't know your password? Reset it after confirming your email
                   address.
                 </p>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md mb-4 flex items-start">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{errorMessage}</span>
               </div>
             )}
 
@@ -71,11 +102,11 @@ export default function Login() {
                 </div>
                 <Button
                   type="submit"
-                  loading={_signingIn}
+                  loading={isLoading}
                   fullWidth
                   className="w-full text-white text-sm bg-[#7C0A02] hover:bg-[#600000]"
                 >
-                  <>Continue</>
+                  Send Reset Link
                 </Button>
               </form>
             ) : (
@@ -86,7 +117,7 @@ export default function Login() {
                 className="py-6"
               >
                 <div className="flex justify-center mb-6">
-                  <MailAnimation email={email} />
+                  <WritingAnimation />
                 </div>
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -108,18 +139,23 @@ export default function Login() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1, duration: 0.5 }}
                     className="mt-6"
-                  ></motion.div>
+                  >
+                    <p className="text-sm text-gray-500">
+                      Click the link in your email to continue with the password
+                      reset process.
+                    </p>
+                  </motion.div>
                 </motion.div>
               </motion.div>
             )}
 
             <p className="mt-8 text-center text-sm text-gray-600">
-              Don&apos;t have an account?{' '}
+              Remember your password?{' '}
               <Link
-                href="/signup"
+                href="/login"
                 className="text-[#7C0A02] hover:underline font-semibold"
               >
-                Sign up
+                Log in
               </Link>
             </p>
           </div>

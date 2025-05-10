@@ -24,12 +24,12 @@ export default function DeveloperDashboardLayout({
           router.push('/login')
         } else if (user.role !== 'developer') {
           // Redirect to appropriate dashboard if not a developer
-          router.push('/dashboard/applicant')
+          router.push('/applicant')
         }
       })
     } else if (user && user.role !== 'developer') {
       // Redirect if authenticated but not a developer
-      router.push('/dashboard/applicant')
+      router.push('applicant')
     }
   }, [isAuthenticated, user, router, fetchUser])
 

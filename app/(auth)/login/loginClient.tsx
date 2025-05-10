@@ -4,13 +4,18 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/store/auth.store'
 import toast from 'react-hot-toast'
-import { useForm } from 'react-hook-form'
+import { SubmitHandler, useForm } from 'react-hook-form'
 import Button from '@/components/common/button'
 import { Input } from '@/components/ui/input'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Key, Lock, Unlock } from 'lucide-react'
-import { loginUser, fetchUser, LoginType } from '@/lib/services/auth.service'
+import {
+  fetchUser as fetchUserService,
+  getRoleBasedRedirectPath,
+  type LoginType,
+  useLogin,
+} from '@/lib/services/auth.service'
 
 interface LocalLoginType {
   email: string
@@ -25,15 +30,18 @@ export default function Login() {
   const searchParams = useSearchParams()
   const redirectUrl = searchParams.get('redirect') || '/'
   const action = searchParams.get('action') || ''
-  const { fetchUser, setToken } = useAuth()
+  // const { fetchUser, setToken } = useAuth()
   const formRef = useRef<HTMLDivElement>(null)
   const [animationStep, setAnimationStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
+  const { mutateAsync: _signIn, isPending: _signingIn } = useLogin()
 
   const {
     handleSubmit,
     register,
     formState: { errors },
+    getValues,
   } = useForm<LoginType>({
     defaultValues: {
       email: '',
@@ -41,27 +49,11 @@ export default function Login() {
     },
   })
 
-  const submit = async (formData: LoginType) => {
-    try {
-      setErrorMessage(null)
-      setIsLoading(true)
-
-      const accessToken = await loginUser(formData)
-      setToken(accessToken)
-
-      await fetchUser()
-
-      toast.success('Signed in successfully')
-      router.push('/dashboard') // Redirect to a default dashboard
-    } catch (error: any) {
-      console.error('Login error:', error)
-      setErrorMessage(
-        error.message || 'Authentication failed. Please try again.'
-      )
-      toast.error(error.message || 'Authentication failed. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
+  const submit: SubmitHandler<LoginType> = async (e: LoginType) => {
+    await _signIn({
+      email: e.email,
+      password: e.password,
+    })
   }
 
   useEffect(() => {
@@ -251,7 +243,7 @@ export default function Login() {
                 : 'translate-y-20 opacity-0 pointer-events-none'
             } ${
               animationComplete
-                ? 'absolute top-[-10px] md:relative md:top-[-120px] '
+                ? 'absolute top-[-90px] md:relative md:top-[-250px] '
                 : ''
             }`}
           >
@@ -302,6 +294,13 @@ export default function Login() {
                   />
                 </svg>
                 <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Debug info - only visible during development */}
+            {process.env.NODE_ENV === 'development' && debugInfo && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-3 rounded-md mb-4 mt-4 text-xs">
+                <strong>Debug:</strong> {debugInfo}
               </div>
             )}
 
@@ -373,7 +372,7 @@ export default function Login() {
                 </div>
                 <div className="text-sm">
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="font-medium text-[#7C0A02] hover:underline"
                   >
                     Forgot password?
@@ -383,11 +382,11 @@ export default function Login() {
 
               <Button
                 type="submit"
-                loading={isLoading}
+                loading={_signingIn}
                 fullWidth
                 className="w-full text-white text-sm bg-[#7C0A02] hover:bg-[#600000]"
               >
-                {isLoading ? 'Logging in...' : 'Log in'}
+                {_signingIn ? 'Signing in...' : 'Log in'}
               </Button>
             </form>
             <p className="mt-8 text-center text-sm text-gray-600">
