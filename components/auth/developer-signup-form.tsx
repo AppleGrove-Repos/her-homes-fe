@@ -23,58 +23,53 @@ export default function DeveloperSignupForm() {
   const [formError, setFormError] = useState<string | null>(null)
   const [step, setStep] = useState(1)
 
+  const defaultBase64Image =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wIAAgMBAp2jkwAAAABJRU5ErkJggg=='
+
   const [formData, setFormData] = useState<DeveloperSignupData>({
     email: '',
     phoneNumber: '',
     password: '',
     role: 'developer',
     companyName: '',
-    companyLogo: '',
+    companyLogo: defaultBase64Image, // Default blank image
     companyDescription: '',
-    yearsOfExperience: '',
+    yearsOfExperience: '', // Ensure this is a string or number
     website: '',
     portfolio: '',
   })
-
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    console.log('Selected file:', file) // Debugging
 
-    if (!file) return
+    if (!file) {
+      toast.error('No file selected. Please choose a file.')
+      return
+    }
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      console.log('FormData:', formData) // Debugging
+      const reader = new FileReader()
 
-      const response = await fetch(
-        'https://api.cloudinary.com/v1_1/your_cloud_name/image/upload',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      )
-
-      const data = await response.json()
-      console.log('Upload response:', data) // Debugging
-
-      if (data.secure_url) {
+      reader.onload = () => {
+        const base64String = reader.result as string
         setFormData((prev) => ({
           ...prev,
-          companyLogo: data.secure_url,
+          companyLogo: base64String || '', // Ensure value is never undefined
         }))
-        toast.success('Logo uploaded successfully!')
-      } else {
-        throw new Error('Failed to upload logo')
+        toast.success('Logo converted to Base64 successfully!')
       }
+
+      reader.onerror = () => {
+        toast.error('Failed to convert file to Base64. Please try again.')
+      }
+
+      reader.readAsDataURL(file)
     } catch (error) {
-      console.error('Error uploading file:', error)
-      toast.error('Unable to upload resource to cloud. Please try again.')
+      console.error('Error processing file:', error)
+      toast.error('An unexpected error occurred. Please try again.')
     }
-  }
-  // Update form data
+  }  // Update form data
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -200,7 +195,7 @@ export default function DeveloperSignupForm() {
               <Input
                 id="companyName"
                 name="companyName"
-                value={formData.companyName}
+                value={formData.companyName || ''} // Ensure value is never undefined
                 onChange={handleChange}
                 placeholder="Enter your company name/fullname"
                 required
@@ -229,7 +224,7 @@ export default function DeveloperSignupForm() {
                 name="yearsOfExperience"
                 type="number"
                 min="0"
-                value={formData.yearsOfExperience || ''}
+                value={formData.yearsOfExperience || ''} // Ensure value is never undefined
                 onChange={handleChange}
                 required
               />
@@ -330,7 +325,7 @@ export default function DeveloperSignupForm() {
                 name="companyLogo"
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleFileChange(e)}
+                onChange={handleFileChange}
               />
             </div>
             <div className="flex justify-between mt-4">

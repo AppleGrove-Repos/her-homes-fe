@@ -1,12 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getCurrentUser, logoutUser } from '../services/auth.service'
+import { fetchUser, logoutUser } from '../services/auth.service'
 
 interface User {
   id: string
   name: string
   email: string
-  role: 'developer' | 'applicant'
+  role: 'developer' | 'applicant' | string
   profilePicture?: string
 }
 
@@ -36,21 +36,18 @@ export const useAuth = create<AuthState>()(
       fetchUser: async () => {
         try {
           set({ isLoading: true })
-          const userData = await getCurrentUser()
 
-          if (userData) {
-            set({
-              user: userData,
-              isAuthenticated: true,
-              isLoading: false,
-            })
-          } else {
-            set({
-              user: null,
-              isAuthenticated: false,
-              isLoading: false,
-            })
+          const token = get().token
+          if (!token) {
+            throw new Error('No token found')
           }
+
+          const userData = await fetchUser(token)
+          set({
+            user: userData,
+            isAuthenticated: true,
+            isLoading: false,
+          })
         } catch (error) {
           console.error('Error fetching user:', error)
           set({

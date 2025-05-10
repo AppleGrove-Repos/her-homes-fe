@@ -3,17 +3,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/store/auth.store'
-import { useMutation } from '@tanstack/react-query'
-import { loginUser } from '@/lib/services/auth.service'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import Button from '@/components/common/button'
 import { Input } from '@/components/ui/input'
 import Image from 'next/image'
-import Link    from 'next/link'
+import Link from 'next/link'
 import { Key, Lock, Unlock } from 'lucide-react'
+import { loginUser, fetchUser, LoginType } from '@/lib/services/auth.service'
 
-interface LoginType {
+interface LocalLoginType {
   email: string
   password: string
 }
@@ -29,6 +28,7 @@ export default function Login() {
   const { fetchUser, setToken } = useAuth()
   const formRef = useRef<HTMLDivElement>(null)
   const [animationStep, setAnimationStep] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
 
   const {
     handleSubmit,
@@ -41,39 +41,26 @@ export default function Login() {
     },
   })
 
-  const { mutateAsync: _signIn, isPending: _signingIn } = useMutation({
-    mutationKey: ['auth', 'sign-in'],
-    mutationFn: loginUser,
-    onSuccess(data) {
-      console.log('Login successful:', data) // Debugging
-      toast.success('Signed in successfully')
-      if (data?.access_token) {
-        setToken(data.access_token)
-        fetchUser()
-
-        let redirectPath = searchParams.get('redirect') || '/'
-        if (!redirectPath.startsWith('/')) {
-          redirectPath = '/'
-        }
-        console.log(`Redirecting to: ${redirectPath}`) // Debugging
-        router.push(redirectPath)
-      }
-    },
-    onError(error: unknown) {
-      console.error('Login error:', error) // Debugging
-      setErrorMessage(
-        'Unable to sign in. Please check your credentials and try again.'
-      )
-      toast.error('Authentication failed. Please try again.')
-    },
-  })
-
   const submit = async (formData: LoginType) => {
     try {
       setErrorMessage(null)
-      await _signIn(formData)
-    } catch (error) {
+      setIsLoading(true)
+
+      const accessToken = await loginUser(formData)
+      setToken(accessToken)
+
+      await fetchUser()
+
+      toast.success('Signed in successfully')
+      router.push('/dashboard') // Redirect to a default dashboard
+    } catch (error: any) {
       console.error('Login error:', error)
+      setErrorMessage(
+        error.message || 'Authentication failed. Please try again.'
+      )
+      toast.error(error.message || 'Authentication failed. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -122,7 +109,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white overflow-hidden">
-      <div className="flex min-h-screen items-center">
+      <div className="flex min-h-screen items-center overflow-hidden">
         <div className="w-full lg:w-1/2 flex flex-col justify-center items-center mt-8 p-8 relative">
           {/* Custom CSS Animation Container */}
           <div
@@ -258,12 +245,14 @@ export default function Login() {
           {/* Form container with animation */}
           <div
             ref={formRef}
-            className={`w-full max-w-md transition-all duration-700 transform ${
+            className={`w-full md:max-w-md max-w-[350px] transition-all duration-700 transform ${
               animationComplete
                 ? 'translate-y-0 opacity-100'
                 : 'translate-y-20 opacity-0 pointer-events-none'
             } ${
-              animationComplete ? 'absolute top-8 md:relative md:top-0' : ''
+              animationComplete
+                ? 'absolute top-[-10px] md:relative md:top-[-120px] '
+                : ''
             }`}
           >
             <button
@@ -394,22 +383,22 @@ export default function Login() {
 
               <Button
                 type="submit"
-                loading={_signingIn}
+                loading={isLoading}
                 fullWidth
                 className="w-full text-white text-sm bg-[#7C0A02] hover:bg-[#600000]"
               >
-                {_signingIn ? 'Logging in...' : 'Log in'}
+                {isLoading ? 'Logging in...' : 'Log in'}
               </Button>
             </form>
-              <p className="mt-8 text-center text-sm text-gray-600">
-                          Don&apos;t have an account?{' '}
-                          <Link
-                            href="/signup"
-                            className="text-[#7C0A02] hover:underline font-semibold"
-                          >
-                            Sign up
-                          </Link>
-                        </p>
+            <p className="mt-8 text-center text-sm text-gray-600">
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/signup"
+                className="text-[#7C0A02] hover:underline font-semibold"
+              >
+                Sign up
+              </Link>
+            </p>
           </div>
         </div>
         <div className="hidden md:mx-32 lg:block bg-[#F1F1F1] relative w-[500px] h-[600px] overflow-hidden rounded-2xl">
@@ -432,7 +421,7 @@ export default function Login() {
               few clicks.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
-              <span className="inline-flex items-center md:ml-12 px-3 py-1 rounded-full text-sm border border-white/30 bg-black/20">
+              <span className="inline-flex items-center md:ml-2 px-3 py-1 rounded-full text-sm border border-white/30 bg-black/20">
                 <svg
                   className="w-4 h-4 mr-1"
                   viewBox="0 0 24 24"

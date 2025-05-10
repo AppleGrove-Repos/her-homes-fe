@@ -4,44 +4,24 @@ import toast from 'react-hot-toast'
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL
 
-interface LoginType {
-  email: string
-  phoneNumber?: string
-  password: string
-}
+  export interface LoginType {
+    email: string
+    password: string
+  }
 
-interface User {
-  id: string
-  name: string
-  email: string
-  role: 'developer' | 'applicant'
-  profilePicture?: string
-}
+  export interface User {
+    id: string
+    name: string
+    email: string
+    role: 'developer' | 'applicant' | string
+  }
+  
 
 interface LoginResponse {
   access_token: string
   user: User
 }
 
-export const loginUser = async (data: LoginType): Promise<LoginResponse> => {
-  try {
-    console.log('Login payload:', data) // Debugging
-    const response = await axios.post(`${API_URL}/auth/signin`, data)
-    console.log('Login response:', response.data) // Debugging
-
-    if (response.data && response.data.data) {
-      return response.data.data
-    }
-
-    throw new Error('Invalid response from server')
-  } catch (error: any) {
-    console.error('Login error:', error.response?.data || error.message) // Debugging
-    const errorMessage =
-      error.response?.data?.message || 'Failed to login. Please try again.'
-    toast.error(errorMessage)
-    throw new Error(errorMessage)
-  }
-}
 
 export const logoutUser = () => {
   if (typeof window !== 'undefined') {
@@ -143,6 +123,46 @@ export const verifyEmail = async (email: string, token: string) => {
     const errorMessage =
       error.response?.data?.message ||
       'Failed to verify email. Please try again.'
+    toast.error(errorMessage)
+    throw new Error(errorMessage)
+  }
+}
+export const loginUser = async (formData: LoginType): Promise<string> => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/signin`, formData)
+    const { data } = response.data
+
+    if (!data?.access_token) {
+      throw new Error('No access token received')
+    }
+
+    return data.access_token
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message ||
+      'Authentication failed. Please try again.'
+    toast.error(errorMessage)
+    throw new Error(errorMessage)
+  }
+}
+export const fetchUser = async (accessToken: string): Promise<User> => {
+  try {
+    const response = await axios.get(`${API_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    const { data } = response.data
+    if (!data || !data.role) {
+      throw new Error('Invalid user data')
+    }
+
+    return data
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message ||
+      'Failed to fetch user info. Please try again.'
     toast.error(errorMessage)
     throw new Error(errorMessage)
   }
