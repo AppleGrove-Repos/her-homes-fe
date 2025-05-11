@@ -20,6 +20,7 @@ interface PropertyCardProps {
   tags?: string[]
   imageUrl: string
   onClick?: () => void // Added onClick property
+  isSaved: boolean
 }
 
 export default function PropertyCard({

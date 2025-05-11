@@ -10,10 +10,13 @@ import {
   Settings,
   FileText,
 } from 'lucide-react'
+import Image from 'next/image'
+import { useAuth } from '@/lib/store/auth.store'
 
 interface SidebarProps {
   userRole: 'developer' | 'applicant'
 }
+
 
 export default function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname()
@@ -22,32 +25,32 @@ export default function Sidebar({ userRole }: SidebarProps) {
   const developerMenuItems = [
     {
       title: 'Dashboard',
-      url: '/dashboard/developer',
+      url: '/developers',
       icon: Home,
     },
     {
       title: 'My Listings',
-      url: '/dashboard/developer/listings',
+      url: '/developers/listing',
       icon: ListFilter,
     },
     {
       title: 'Add New Property',
-      url: '/dashboard/developer/properties/add',
+      url: '/developers/properties/add',
       icon: PlusCircle,
     },
     {
       title: 'Application',
-      url: '/dashboard/developer/applications',
+      url: '/developers/applications',
       icon: FileText,
     },
     {
       title: 'Messages',
-      url: '/dashboard/developer/messages',
+      url: '/developers/messages',
       icon: MessageSquare,
     },
     {
       title: 'Account Settings',
-      url: '/dashboard/developer/settings',
+      url: '/developers/settings',
       icon: Settings,
     },
   ]
@@ -60,22 +63,22 @@ export default function Sidebar({ userRole }: SidebarProps) {
     },
     {
       title: 'Browse Properties',
-      url: '/dashboard/applicant/properties',
+      url: '/applicant/properties',
       icon: ListFilter,
     },
     {
       title: 'My Applications',
-      url: '/dashboard/applicant/applications',
+      url: '/applicant/applications',
       icon: FileText,
     },
     {
       title: 'Messages',
-      url: '/dashboard/applicant/messages',
+      url: '/applicant/messages',
       icon: MessageSquare,
     },
     {
       title: 'Account Settings',
-      url: '/dashboard/applicant/settings',
+      url: '/applicant/settings',
       icon: Settings,
     },
   ]
@@ -86,29 +89,14 @@ export default function Sidebar({ userRole }: SidebarProps) {
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b">
-        <Link href={`/dashboard/${userRole}`} className="flex items-center">
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M8 16H4L16 4L28 16H24"
-              stroke="#7C0A02"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8 16V26C8 26.5304 8.21071 27.0391 8.58579 27.4142C8.96086 27.7893 9.46957 28 10 28H22C22.5304 28 23.0391 27.7893 23.4142 27.4142C23.7893 27.0391 24 26.5304 24 26V16"
-              stroke="#7C0A02"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <Link href={`/${userRole}`} className="flex items-center">
+          <Image
+            src="/assets/images/header-logo.png"
+            alt="Her Homes"
+            width={40}
+            height={40}
+            className="mr-0"
+          />
           <span className="ml-2 text-xl font-bold">Her Homes</span>
         </Link>
       </div>

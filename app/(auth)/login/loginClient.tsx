@@ -1,102 +1,122 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuth } from '@/lib/store/auth.store'
-import toast from 'react-hot-toast'
-import { SubmitHandler, useForm } from 'react-hook-form'
-import Button from '@/components/common/button'
-import { Input } from '@/components/ui/input'
-import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useMutation } from '@tanstack/react-query'
 import { Key, Lock, Unlock } from 'lucide-react'
-import {
-  fetchUser as fetchUserService,
-  getRoleBasedRedirectPath,
-  type LoginType,
-  useLogin,
-} from '@/lib/services/auth.service'
+import { useAuth } from '@/lib/store/auth.store'
+import { http } from '@/lib/config/axios.config'
+import { errorHandler } from '@/lib/config/axios-error'
+import { Input } from '@/components/ui/input'
+import Button from '@/components/common/button/index'
 
-interface LocalLoginType {
+interface LoginFormData {
   email: string
   password: string
 }
 
 export default function Login() {
-  const [rememberMe, setRememberMe] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [animationComplete, setAnimationComplete] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectUrl = searchParams.get('redirect') || '/'
-  const action = searchParams.get('action') || ''
-  // const { fetchUser, setToken } = useAuth()
+  const { setUser } = useAuth()
+  const [rememberMe, setRememberMe] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [debugInfo, setDebugInfo] = useState('')
+  const [redirectUrl, setRedirectUrl] = useState('')
   const formRef = useRef<HTMLDivElement>(null)
-  const [animationStep, setAnimationStep] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
-  const { mutateAsync: _signIn, isPending: _signingIn } = useLogin()
 
+  // Animation states
+  const [animationStep, setAnimationStep] = useState(0)
+  const [animationComplete, setAnimationComplete] = useState(false)
+
+  // Form setup with react-hook-form
   const {
-    handleSubmit,
     register,
+    handleSubmit,
     formState: { errors },
-    getValues,
-  } = useForm<LoginType>({
-    defaultValues: {
-      email: '',
-      password: '',
+  } = useForm<LoginFormData>()
+
+  // Animation sequence
+  useEffect(() => {
+    const animationTimer = setTimeout(
+      () => {
+        if (animationStep < 4) {
+          setAnimationStep(animationStep + 1)
+        } else if (!animationComplete) {
+          setAnimationComplete(true)
+        }
+      },
+      animationStep === 0 ? 1000 : 800
+    )
+
+    return () => clearTimeout(animationTimer)
+  }, [animationStep, animationComplete])
+
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginFormData) => {
+      const response = await http.post('/auth/signin', {
+        email: data.email,
+        password: data.password,
+      })
+      return response.data
+    },
+    onError: (error: any) => {
+      // Handle error
+      const errorMsg = errorHandler(error)
+      setErrorMessage(
+        typeof errorMsg === 'string'
+          ? errorMsg
+          : 'Failed to sign in. Please check your credentials.'
+      )
+
+      if (process.env.NODE_ENV === 'development') {
+        setDebugInfo(JSON.stringify(error.response?.data || error.message))
+      }
+    },
+    onSuccess: (data) => {
+      // Make sure we're using the correct data structure
+      const userData = data.data?.user || data.user
+
+      // Set user in auth store
+      setUser(userData)
+
+      console.log('Login successful, user role:', userData.role)
+
+      // Redirect based on user role or redirect URL
+      if (redirectUrl && redirectUrl !== '/') {
+        console.log('Redirecting to:', redirectUrl)
+        router.push(redirectUrl)
+      } else if (userData.role === 'developer') {
+        console.log('Redirecting to developer dashboard')
+        router.push('/developers')
+      } else if (userData.role === 'applicant') {
+        console.log('Redirecting to applicant dashboard')
+        router.push('/applicant')
+      } else {
+        console.log('Redirecting to home')
+        router.push('/')
+      }
     },
   })
 
-  const submit: SubmitHandler<LoginType> = async (e: LoginType) => {
-    await _signIn({
-      email: e.email,
-      password: e.password,
-    })
+  const submit = (data: LoginFormData) => {
+    setErrorMessage('')
+    loginMutation.mutate(data)
   }
 
-  useEffect(() => {
-    // Simple animation sequence with steps
-    const timer1 = setTimeout(() => {
-      setAnimationStep(1)
-    }, 800)
-
-    const timer2 = setTimeout(() => {
-      setAnimationStep(2)
-    }, 1600)
-
-    const timer3 = setTimeout(() => {
-      setAnimationStep(3)
-    }, 2400)
-
-    const timer4 = setTimeout(() => {
-      setAnimationComplete(true)
-    }, 3000)
-
-    return () => {
-      clearTimeout(timer1)
-      clearTimeout(timer2)
-      clearTimeout(timer3)
-      clearTimeout(timer4)
-    }
-  }, [])
-
-  // Get the destination name from the redirect URL for display
   const getDestinationName = () => {
-    const redirectPath = searchParams.get('redirect') || ''
+    if (!redirectUrl) return ''
 
-    if (redirectPath.includes('/listings/') && action === 'view-more') {
-      return 'view property details'
-    } else if (redirectPath.includes('/listings') && action === 'view-more') {
-      return 'browse more properties'
-    } else if (action === 'contact') {
-      return 'contact an agent'
-    } else if (action === 'mortgage') {
-      return 'apply for a mortgage'
+    if (redirectUrl.includes('developer')) {
+      return 'Developer Dashboard'
+    } else if (redirectUrl.includes('applicant')) {
+      return 'Applicant Dashboard'
+    } else {
+      return 'continue'
     }
-
-    return 'continue'
   }
 
   return (
@@ -382,11 +402,11 @@ export default function Login() {
 
               <Button
                 type="submit"
-                loading={_signingIn}
+                loading={loginMutation.isPending}
                 fullWidth
                 className="w-full text-white text-sm bg-[#7C0A02] hover:bg-[#600000]"
               >
-                {_signingIn ? 'Signing in...' : 'Log in'}
+                {loginMutation.isPending ? 'Signing in...' : 'Log in'}
               </Button>
             </form>
             <p className="mt-8 text-center text-sm text-gray-600">

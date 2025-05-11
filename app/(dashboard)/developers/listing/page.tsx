@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui/card'
 import {
@@ -14,17 +15,12 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  getProperties,
-  deleteProperty,
-} from '@/lib/services/developer/developer.services'
+import { useGetPropertyListings, type PropertyFilterParams } from '@/lib/hooks/usePropertyApi'
 import { toast } from 'sonner'
-import { usePropertyStore } from '@/lib/store/property-store'
-import { useApiQuery } from '@/lib/hooks/use-api-query'
-import { useSearchParams } from '@/lib/hooks/useSearchParams'
+import { useRouter, useSearchParams } from 'next/navigation'
 import TextField from '@/components/common/inputs/text-field'
 import SelectField from '@/components/common/inputs/select-field'
-import type { SearchProperties } from '@/lib/types/types'
+import { deleteProperty } from '@/lib/services/developer/developer.services'
 import Button from '@/components/common/button/index'
 import Modal from '@/components/developer/modal'
 
@@ -46,46 +42,69 @@ const statusOptions = [
 ]
 
 export default function ListingsPage() {
-  const { searchParams, setParam } = useSearchParams()
-  const { updateQuery, query } = usePropertyStore()
-  const [activeTab, setActiveTab] = useState(searchParams.get('status') || '')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<string>('') // Add activeTab state
+  const [filterParams, setFilterParams] = useState<PropertyFilterParams>({})
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null)
-
-  const { query: filterQuery, changeQuery } = useApiQuery<SearchProperties>({
-    defaultValues: {
-      page: 1,
-      limit: 10,
-      search: searchParams.get('search') || '',
-      propertyType: searchParams.get('propertyType') || '',
-      status: searchParams.get('status') || '',
-    },
-    onChangeQuery: (q) => {
-      if (updateQuery) {
-        updateQuery(q)
-      }
-
-      // Update URL params
-      if (q.search) setParam('search', q.search)
-      if (q.propertyType) setParam('propertyType', q.propertyType)
-      if (q.status) setParam('status', q.status)
-    },
-  })
-
   const {
-    data: properties = [],
+    data: propertyResponse,
     isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ['properties', filterQuery],
-    queryFn: () => getProperties(filterQuery),
-  })
+    isError,
+  } = useGetPropertyListings(filterParams)
+  const properties = propertyResponse?.data || []
 
+  // Initialize search query from URL params
   useEffect(() => {
-    if (activeTab) {
-      changeQuery('status', activeTab)
+    const urlSearchQuery = searchParams.get('searchQuery')
+    if (urlSearchQuery) {
+      setSearchQuery(urlSearchQuery)
     }
-  }, [activeTab])
+
+    // Initialize filter params from URL params
+    const apiFilters: PropertyFilterParams = {}
+    if (searchParams.get('propertyType'))
+      apiFilters.propertyType = searchParams.get('propertyType')!
+    if (searchParams.get('status'))
+      apiFilters.status = searchParams.get('status')!
+    if (searchParams.get('searchQuery'))
+      apiFilters.search = searchParams.get('searchQuery')!
+    apiFilters.limit = 10
+    setFilterParams(apiFilters)
+  }, [searchParams])
+
+  // Function to update URL query params when filters change
+  const applyFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (searchQuery) params.set('searchQuery', searchQuery)
+    else params.delete('searchQuery')
+
+    // Update the URL with filters
+    router.push(`/developers/listing?${params.toString()}`)
+
+    // Update filter params for API
+    const apiFilters: PropertyFilterParams = {}
+    if (searchQuery) apiFilters.search = searchQuery
+    apiFilters.limit = 10
+    setFilterParams(apiFilters)
+  }, [searchQuery, router, searchParams])
+
+  const clearSearch = () => {
+    setSearchQuery('')
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('searchQuery')
+    router.push(`/developers/listing?${params.toString()}`)
+
+    // Update filter params for API
+    setFilterParams((prev) => {
+      const newFilters = { ...prev }
+      delete newFilters.search
+      return newFilters
+    })
+  }
 
   const openDeleteModal = (id: string) => {
     setPropertyToDelete(id)
@@ -98,11 +117,26 @@ export default function ListingsPage() {
     try {
       await deleteProperty(propertyToDelete)
       toast.success('Property deleted successfully')
-      refetch()
       setDeleteModalOpen(false)
     } catch (error) {
       toast.error('Failed to delete property')
     }
+  }
+  function changeQuery(key: string, value: string): void {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (value) {
+      params.set(key, value)
+    } else {
+      params.delete(key)
+    }
+
+    router.push(`/developers/listing?${params.toString()}`)
+
+    setFilterParams((prev) => ({
+      ...prev,
+      [key]: value || undefined,
+    }))
   }
 
   return (
@@ -143,7 +177,7 @@ export default function ListingsPage() {
             label="Search"
             InputProps={{
               placeholder: 'Search by name or location...',
-              value: filterQuery.search || '',
+              value: filterParams.search || '',
               onChange: (e) => changeQuery('search', e.target.value),
             }}
             className="w-full"
@@ -153,7 +187,7 @@ export default function ListingsPage() {
         <SelectField
           label="Property Type"
           data={propertyTypes}
-          value={filterQuery.propertyType || ''}
+          value={filterParams.propertyType || ''}
           onSelect={(option) => changeQuery('propertyType', option.value)}
           onClear={() => changeQuery('propertyType', '')}
           className="w-full md:w-[200px]"
@@ -176,13 +210,16 @@ export default function ListingsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {properties.length > 0 ? (
-            properties.map((property: Property) => (
-              <PropertyCard
-          key={property._id}
-          property={property}
-          onDelete={() => openDeleteModal(property._id)}
-              />
-            ))
+          properties.map((property) => (
+            <PropertyCard
+              key={property._id}
+              property={{
+                ...property,
+                status: property.status as 'pending' | 'approved' | 'rejected',
+              }}
+              onDelete={() => openDeleteModal(property._id)}
+            />
+          ))
           ) : (
             <div className="col-span-3 flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground">No properties found</p>

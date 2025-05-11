@@ -1,7 +1,8 @@
 import { https } from '@/lib/config/axios.config'
 import { errorHandler } from '@/lib/utils/error'
-import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import axios from "axios"
 
 // Property interface
 export interface Property {
@@ -46,6 +47,7 @@ export interface PropertyFilterParams {
   bedrooms?: string
   location?: string
   moreFilters?: string
+  status?: string
 }
 
 // Get property by ID - no auth required
@@ -207,6 +209,80 @@ export const useApplyForMortgage = () => {
         errorHandler(error)
         throw error
       }
+    },
+  })
+}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+export const useGetUserListings = (params: PropertyFilterParams = {}) => {
+  return useQuery({
+    queryKey: ['userListings', params],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams()
+
+      if (params.page) queryParams.set('page', params.page.toString())
+      if (params.limit) queryParams.set('limit', params.limit.toString())
+      if (params.search) queryParams.set('search', params.search)
+      if (params.propertyType)
+        queryParams.set('propertyType', params.propertyType)
+      if (params.priceRange) queryParams.set('priceRange', params.priceRange)
+      if (params.bedrooms) queryParams.set('bedrooms', params.bedrooms)
+      if (params.location) queryParams.set('location', params.location)
+      if (params.moreFilters) queryParams.set('moreFilters', params.moreFilters)
+
+      // Use the correct endpoint for user listings
+      const response = await axios.get(
+        `${API_URL}/listing/user?${queryParams.toString()}`,
+        {
+          withCredentials: true,
+        }
+      )
+
+      return response.data
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+// Get single property
+export const useGetAUTHProperty = (propertyId: string) => {
+  return useQuery({
+    queryKey: ['property', propertyId],
+    queryFn: async () => {
+      // Use the correct endpoint for a specific listing
+      const response = await axios.get(`${API_URL}/listing/${propertyId}`)
+      return response.data
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!propertyId,
+  })
+}
+
+// Toggle property favorite status
+export const useToggleFavorite = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      propertyId,
+      isFavorite,
+    }: {
+      propertyId: string
+      isFavorite: boolean
+    }) => {
+      // This is a placeholder - you would need to implement the actual endpoint
+      // based on your API structure
+      const response = await axios.post(
+        `${API_URL}/listing/${propertyId}/favorite`,
+        { isFavorite },
+        {
+          withCredentials: true,
+        }
+      )
+      return response.data
+    },
+    onSuccess: () => {
+      // Invalidate user listings query to refetch
+      queryClient.invalidateQueries({ queryKey: ['userListings'] })
     },
   })
 }

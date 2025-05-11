@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import type { UserRole } from '@/lib/types/auth'
 import { cn } from '@/lib/utils/utils'
+import Link from 'next/link'
 // import { useRouter } from 'next/navigation'
 
 interface RoleSelectionProps {
@@ -149,6 +150,15 @@ export default function RoleSelection({
       >
         Continue
       </motion.button>
+        <p className="mt-8 text-center text-sm text-gray-600">
+                     Have an account?{' '}
+                    <Link
+                      href="/login"
+                      className="text-[#7C0A02] hover:underline font-semibold"
+                    >
+                      Login
+                    </Link>
+                  </p>
     </motion.div>
   )
 }

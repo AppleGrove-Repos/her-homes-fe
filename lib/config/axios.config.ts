@@ -5,10 +5,10 @@ import { Cookie } from 'lucide-react'
 // Create axios instance with base URL and credentials
 export const https = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
+  withCredentials: true, // Enable cookies
   headers: {
     'Content-Type': 'application/json',
-    Accept: '*/*',
+    Accept: 'application/json',
   },
 })
 export const http = axios.create({
@@ -77,7 +77,7 @@ https.interceptors.response.use(
 )
 
 function logoutUser() {
-  
+
 
   // Redirect the user to the login page
   if (typeof window !== 'undefined') {

@@ -5,6 +5,8 @@ import { useMutation } from '@tanstack/react-query'
 import { http, https } from '../config/axios.config'
 import { errorHandler } from '../config/axios-error'
 import { toastSuccess } from '../utils/toast'
+import { useQuery } from '@tanstack/react-query'
+import { useAuth } from '@/lib/store/auth.store'
 
 export interface LoginType {
   email: string
@@ -16,6 +18,7 @@ export interface User {
   name: string
   email: string
   role: 'developer' | 'applicant' | string
+  profilePicture?: string
 }
 
 interface LoginResponse {
@@ -32,14 +35,32 @@ export const logoutUser = () => {
 
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
-    const response = await https.get(`${API_URL}/user`)
+    console.log('Fetching user data from:', `${API_URL}/user`)
+    const response = await https.get('/user') // Axios instance with cookies enabled
+    console.log('User data response:', response.data)
+
     return response.data.data
   } catch (error: any) {
-    const errorMessage =
-      error.response?.data?.message || 'Failed to fetch user data'
-    console.error(errorMessage)
+    if (error.response) {
+      console.error('Server error:', error.response.data)
+    } else if (error.request) {
+      console.error('No response received:', error.request)
+    } else {
+      console.error('Error setting up request:', error.message)
+    }
+
     return null
   }
+}
+
+// React Query hook for getting current user
+export const useCurrentUser = () => {
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: getCurrentUser,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
 }
 
 export const changePassword = async (data: {
@@ -124,6 +145,8 @@ export const useLogin = () => {
         email: data.email,
         password: data.password,
       })
+      const userData = response.data.user
+      useAuth.getState().setUser(userData)
       return response?.data
     },
     onError(error) {
@@ -180,11 +203,11 @@ export const getRoleBasedRedirectPath = (role: string): string => {
 
   switch (role) {
     case 'developer':
-      return '/dashboard/developer'
+      return '/developers'
     case 'applicant':
-      return '/dashboard/applicant'
+      return '/applicant'
     case 'admin':
-      return '/dashboard/admin'
+      return '/admin'
     default:
       console.warn('Unknown role:', role)
       return '/' // Default redirect if role is unknown

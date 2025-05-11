@@ -634,6 +634,7 @@ function ListingsContent() {
                       : '/placeholder.jpg'
                   }
                   onClick={() => handlePropertyClick(property.id)}
+                  isSaved={false} // Provide a default value or dynamic value
                 />
               ))}
             </div>
