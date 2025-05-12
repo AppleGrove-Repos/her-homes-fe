@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button'
 import { Search, Loader2, X, Filter } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '@/lib/services/use-auth-mynobrain'
+import { useAuth } from '@/lib/store/auth.store'
+import { AuthProvider } from '@/lib/store/auth-provider'
 import {
   useGetPropertyListings,
   type PropertyFilterParams,
@@ -24,8 +25,7 @@ import LoadingSpinner from '@/components/loading-spinner'
 // Create a client
 const queryClient = new QueryClient()
 
-// Wrapper component with QueryClientProvider
-import { AuthProvider } from '@/lib/services/use-auth-mynobrain'
+// Wrapper component with QueryClientProvider'
 
 export default function ListingsPage() {
   return (

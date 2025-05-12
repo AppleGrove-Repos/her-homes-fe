@@ -98,7 +98,7 @@ export const useGetPropertyListings = (filters?: PropertyFilterParams) => {
 
         const queryString = queryParams.toString()
         const response = await https.get<ApiResponse<Property[]>>(
-          `/listing${queryString ? `?${queryString}` : ''}`
+          `/listing/developer${queryString ? `?${queryString}` : ''}`
         )
         return response.data
       } catch (error) {

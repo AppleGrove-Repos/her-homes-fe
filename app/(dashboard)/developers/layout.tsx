@@ -14,8 +14,9 @@ export default function DeveloperDashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, setUser, fetchUser } = useAuth() // Always call hooks at the top level
+  const { user, fetchUser } = useAuth() // Always call hooks at the top level
   const router = useRouter()
+  const pathname = usePathname() // Call usePathname at the top level
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function DeveloperDashboardLayout({
       className="flex h-screen bg-gray-50"
     >
       <Sidebar userRole="developer" />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex ml-20 flex-col overflow-hidden">
         <motion.header
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -120,7 +121,7 @@ export default function DeveloperDashboardLayout({
         >
           <AnimatePresence mode="wait">
             <motion.div
-              key={usePathname()}
+              key={pathname} // Use pathname here
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}

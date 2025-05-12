@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useAuth } from '../services/use-auth-mynobrain'
+import { useAuth } from '../store/auth.store'
 
 interface FilterState {
   propertyType: string

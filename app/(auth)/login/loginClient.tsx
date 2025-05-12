@@ -8,7 +8,7 @@ import Image from 'next/image'
 import { useMutation } from '@tanstack/react-query'
 import { Key, Lock, Unlock } from 'lucide-react'
 import { useAuth } from '@/lib/store/auth.store'
-import { http } from '@/lib/config/axios.config'
+import { https } from '@/lib/config/axios.config'
 import { errorHandler } from '@/lib/config/axios-error'
 import { Input } from '@/components/ui/input'
 import Button from '@/components/common/button/index'
@@ -57,7 +57,7 @@ export default function Login() {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      const response = await http.post('/auth/signin', {
+      const response = await https.post('/auth/signin', {
         email: data.email,
         password: data.password,
       })
@@ -77,10 +77,18 @@ export default function Login() {
       }
     },
     onSuccess: (data) => {
-      // Make sure we're using the correct data structure
-      const userData = data.data?.user || data.user
+      // Extract tokens from the response
+      const { access_token, refresh_token } = data.data
+
+      // Store tokens in localStorage
+      localStorage.setItem('auth_token', access_token)
+      localStorage.setItem('refresh_token', refresh_token)
+
+      // Update Axios headers with the new token
+      https.defaults.headers.Authorization = `Bearer ${access_token}`
 
       // Set user in auth store
+      const userData = data.data?.user || data.user
       setUser(userData)
 
       console.log('Login successful, user role:', userData.role)
@@ -439,8 +447,8 @@ export default function Login() {
               that match your lifestyle, preferences, and dreams — all in just a
               few clicks.
             </p>
-            <div className="flex flex-wrap gap-3 items-center">
-              <span className="inline-flex items-center md:ml-2 px-3 py-1 rounded-full text-sm border border-white/30 bg-black/20">
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-[12px] border border-white/30 bg-black/20">
                 <svg
                   className="w-4 h-4 mr-1"
                   viewBox="0 0 24 24"
@@ -457,7 +465,7 @@ export default function Login() {
                 </svg>
                 Trusted Agent
               </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm border border-white/30 bg-black/20">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-[12px] border border-white/30 bg-black/20">
                 Available Across Nigeria
               </span>
             </div>

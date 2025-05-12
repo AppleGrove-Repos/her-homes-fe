@@ -91,10 +91,15 @@ export default function MobileMenu() {
               ))}
 
               <motion.div variants={itemVariants} className="w-full">
-              <Link href="/signup" passHref legacyBehavior>
-                <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md w-full mt-4">
-                  Sign Up
-                </Button>
+                <Link href="/signup" passHref legacyBehavior>
+                  <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md w-full mt-4">
+                    Sign Up
+                  </Button>
+                </Link>
+                <Link href="/login" passHref legacyBehavior>
+                  <Button className="border-[#6e1a2c] bg-transparent hover:bg-[#5a1523] hover:text-white text-black rounded-md w-full mt-4">
+                    Login
+                  </Button>
                 </Link>
               </motion.div>
             </nav>

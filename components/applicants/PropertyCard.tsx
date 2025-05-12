@@ -7,7 +7,7 @@ import { Star, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/services/use-auth-mynobrain'
+import { useAuth } from '@/lib/store/auth.store'
 
 interface PropertyCardProps {
   id: string

@@ -11,6 +11,7 @@ export const https = axios.create({
     Accept: 'application/json',
   },
 })
+
 export const http = axios.create({
   baseURL: API_URL,
   withCredentials: false,
@@ -19,22 +20,37 @@ export const http = axios.create({
   },
 })
 
+https.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token') // Retrieve token from localStorage
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}` // Attach token to Authorization header
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// Refresh token logic
 const refreshToken = async () => {
   try {
-    const refreshToken = localStorage.getItem('refresh_token') // Assuming refresh token is stored in localStorage
-    if (!refreshToken) {
+    const refresh_token = localStorage.getItem('refresh_token') // Retrieve refresh token
+    if (!refresh_token) {
       throw new Error('No refresh token found')
     }
 
     const response = await axios.post(`${API_URL}/auth/session/refresh`, {
-      refresh_token: refreshToken,
+      refresh_token,
     })
 
-    const { access_token, refresh_token } = response.data.data
+    const { access_token, refresh_token: new_refresh_token } =
+      response.data.data
 
     // Update tokens in localStorage
     localStorage.setItem('auth_token', access_token)
-    localStorage.setItem('refresh_token', refresh_token)
+    localStorage.setItem('refresh_token', new_refresh_token)
 
     // Update Axios headers with the new token
     https.defaults.headers.Authorization = `Bearer ${access_token}`
@@ -76,12 +92,14 @@ https.interceptors.response.use(
   }
 )
 
+// Logout function
 function logoutUser() {
-
+  // Clear tokens from localStorage
+  localStorage.removeItem('auth_token')
+  localStorage.removeItem('refresh_token')
 
   // Redirect the user to the login page
   if (typeof window !== 'undefined') {
     window.location.href = '/login'
   }
 }
-

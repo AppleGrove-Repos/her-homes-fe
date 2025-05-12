@@ -44,12 +44,12 @@ const statusOptions = [
 interface PropertyFormData {
   name: string
   description: string
-  bedrooms: number
+  bedrooms: string
   location: string
-  price: number
+  price: string
   propertyType: string
-  minDownPaymentPercent: number
-  minMonthlyPayment: number
+  minDownPaymentPercent: string
+  minMonthlyPayment: string
   status: 'pending' | 'approved' | 'rejected'
 }
 
@@ -99,7 +99,7 @@ export default function EditPropertyPage() {
       } catch (error) {
         console.error('Error fetching property:', error)
         toast.error('Failed to load property data')
-        router.push('/dashboard/developer/listings')
+        router.push('/developer/listings')
       } finally {
         setIsLoading(false)
       }
@@ -126,7 +126,7 @@ export default function EditPropertyPage() {
     try {
       await updateProperty(propertyId, data)
       toast.success('Property updated successfully!')
-      router.push('/dashboard/developer/listings')
+      router.push('/developer/listings')
     } catch (error) {
       console.error('Error updating property:', error)
       toast.error('Failed to update property. Please try again.')
@@ -147,7 +147,7 @@ export default function EditPropertyPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
-          href="/dashboard/developer/listings"
+          href="/developer/listings"
           className="text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-5 w-5" />

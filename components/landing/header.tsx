@@ -44,10 +44,16 @@ export default function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="/listings" className="text-sm font-medium hover:text-[#e6a287]">
+          <Link
+            href="/listings"
+            className="text-sm font-medium hover:text-[#e6a287]"
+          >
             Browse Listings
           </Link>
-          <Link href="/apply-for-financing" className="text-sm font-medium hover:text-[#e6a287]">
+          <Link
+            href="/apply-for-financing"
+            className="text-sm font-medium hover:text-[#e6a287]"
+          >
             Apply for Financing
           </Link>
           <Link href="#" className="text-sm font-medium hover:text-[#e6a287]">
@@ -59,6 +65,11 @@ export default function Header() {
           <Link href="/signup" passHref legacyBehavior>
             <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md text-sm hidden md:inline-flex">
               Sign Up
+            </Button>
+          </Link>
+          <Link href="/login" passHref legacyBehavior>
+            <Button className="bg-transparent border-[#6e1a2c] hover:bg-[#5a1523] text-black hover:text-white rounded-md text-sm hidden md:inline-flex">
+              Login
             </Button>
           </Link>
           <MobileMenu />

@@ -53,15 +53,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
   }
 }
 
-// React Query hook for getting current user
-export const useCurrentUser = () => {
-  return useQuery({
-    queryKey: ['currentUser'],
-    queryFn: getCurrentUser,
-    retry: false,
-    refetchOnWindowFocus: false,
-  })
-}
+
 
 export const changePassword = async (data: {
   currentPassword: string

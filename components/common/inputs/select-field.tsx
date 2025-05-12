@@ -40,6 +40,7 @@ interface Props {
   showDropDownSuffix?: string
   label?: string
   helperText?: string
+  labelClassName?: string
 }
 
 const SelectField: FC<Props> = ({

@@ -1,8 +1,9 @@
 import axios from 'axios'
 import toast from 'react-hot-toast'
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://api.herhomees.com/api'
+import { API_URL } from '@/lib/constants/env'
+import {  https } from '@/lib/config/axios.config'
+// const API_URL =
+//   process.env.NEXT_PUBLIC_API_URL || 'https://api.herhomees.com/api'
 
 // Property interfaces
 export interface Property {
@@ -23,12 +24,12 @@ export interface Property {
 export interface CreatePropertyDto {
   name: string
   description: string
-  bedrooms: number
+  bedrooms: string
   location: string
-  price: number
+  price: string // <-- change to string
   propertyType: string
-  minDownPaymentPercent: number
-  minMonthlyPayment: number
+  minDownPaymentPercent: string // <-- change to string
+  minMonthlyPayment: string
   status?: 'pending' | 'approved' | 'rejected'
 }
 
@@ -43,8 +44,6 @@ export interface SearchProperties {
 // Get developer's properties
 export const getProperties = async (query?: SearchProperties) => {
   try {
-    const token = localStorage.getItem('token')
-    if (!token) throw new Error('Authentication required')
 
     const queryString = query
       ? Object.entries(query)
@@ -54,11 +53,7 @@ export const getProperties = async (query?: SearchProperties) => {
       : ''
 
     const endpoint = `/listing/developer${queryString ? `?${queryString}` : ''}`
-    const response = await axios.get(`${API_URL}${endpoint}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const response = await https.get(`${API_URL}${endpoint}`,)
 
     return response.data.data
   } catch (error: any) {
@@ -72,10 +67,10 @@ export const getProperties = async (query?: SearchProperties) => {
 // Get property by ID
 export const getPropertyById = async (propertyId: string) => {
   try {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('auth_token')
     if (!token) throw new Error('Authentication required')
 
-    const response = await axios.get(`${API_URL}/listing/${propertyId}`, {
+    const response = await https.post(`${API_URL}/listing/${propertyId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -93,14 +88,9 @@ export const getPropertyById = async (propertyId: string) => {
 // Create a new property
 export const createProperty = async (data: CreatePropertyDto) => {
   try {
-    const token = localStorage.getItem('token')
-    if (!token) throw new Error('Authentication required')
-
-    const response = await axios.post(`${API_URL}/listing`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    // No need to manually get the token or add it to headers
+    // The interceptor will handle that
+    const response = await https.post('/listing', data)
 
     toast.success('Property created successfully')
     return response.data.data
@@ -111,24 +101,17 @@ export const createProperty = async (data: CreatePropertyDto) => {
     throw new Error(errorMessage)
   }
 }
-
 // Update a property
 export const updateProperty = async (
   propertyId: string,
   data: Partial<CreatePropertyDto>
 ) => {
   try {
-    const token = localStorage.getItem('token')
-    if (!token) throw new Error('Authentication required')
+   
 
-    const response = await axios.patch(
+    const response = await https.patch(
       `${API_URL}/listing/${propertyId}`,
       data,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
     )
 
     toast.success('Property updated successfully')
@@ -144,14 +127,9 @@ export const updateProperty = async (
 // Delete a property
 export const deleteProperty = async (propertyId: string) => {
   try {
-    const token = localStorage.getItem('token')
-    if (!token) throw new Error('Authentication required')
+   
 
-    await axios.delete(`${API_URL}/listing/${propertyId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    await https.delete(`${API_URL}/listing/${propertyId}`,)
 
     toast.success('Property deleted successfully')
     return true

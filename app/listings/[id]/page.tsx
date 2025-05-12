@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import Header from '@/components/landing/header'
 import Footer from '@/components/landing/footer'
-import { useAuth } from '@/lib/services/use-auth-mynobrain'
+import { useAuth } from '@/lib/store/auth.store'
 import {
   useGetProperty,
   useSaveProperty,

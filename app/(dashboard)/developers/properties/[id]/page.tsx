@@ -56,12 +56,12 @@ export default function PropertyDetailPage() {
           setProperty(data)
         } else {
           toast.error('Property not found')
-          router.push('/dashboard/developer/listings')
+          router.push('/developer/listings')
         }
       } catch (error) {
         console.error('Error fetching property:', error)
         toast.error('Failed to load property data')
-        router.push('/dashboard/developer/listings')
+        router.push('/developer/listings')
       } finally {
         setLoading(false)
       }
@@ -79,7 +79,7 @@ export default function PropertyDetailPage() {
       const success = await deleteProperty(propertyId)
       if (success) {
         toast.success('Property deleted successfully')
-        router.push('/dashboard/developer/listings')
+        router.push('/developer/listings')
       } else {
         toast.error('Failed to delete property')
         setDeleteDialogOpen(false)
@@ -121,7 +121,7 @@ export default function PropertyDetailPage() {
           The property you're looking for doesn't exist or has been removed.
         </p>
         <div className="mt-6">
-          <Link href="/dashboard/developer/listings">
+          <Link href="/developer/listings">
             <Button className="bg-[#7C0A02] text-white hover:bg-[#600000]">
               Back to Listings
             </Button>
@@ -145,7 +145,7 @@ export default function PropertyDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
-          href="/dashboard/developer/listings"
+          href="/developer/listings"
           className="text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -272,7 +272,7 @@ export default function PropertyDetailPage() {
                 </div>
                 <div className="flex gap-2">
                   <Link
-                    href={`/dashboard/developer/properties/edit/${property._id}`}
+                    href={`/developer/properties/edit/${property._id}`}
                   >
                     <Button variant="outline" size="small">
                       <Edit className="h-4 w-4 mr-1" />

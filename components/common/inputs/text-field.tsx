@@ -34,6 +34,7 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   helperTextProps?: HTMLAttributes<HTMLHeadingElement>
   multiline?: boolean
   inputSuffix?: ReactElement
+  labelClassName?: string
 }
 
 export default function TextField({
