@@ -1,5 +1,7 @@
 'use client'
 
+import type React from 'react'
+
 import { useEffect, useState, type FC } from 'react'
 import { BiTrash, BiUpload } from 'react-icons/bi'
 
@@ -45,18 +47,26 @@ const VideoUploader: FC<Props> = ({
       return
     }
 
-    if (file.size > 500 * 1024 * 1024) {
-      alert('Video file is too large. Maximum size is 500MB.')
+    if (file.size > 100 * 1024 * 1024) {
+      // Changed to 100MB as mentioned in your UI text
+      alert('Video file is too large. Maximum size is 100MB.')
       return
     }
 
-    const base64 = await fileToBase64(file)
-    if (!base64.startsWith('data:video/')) {
-      alert('Invalid video format.')
-      return
-    }
+    try {
+      const base64 = await fileToBase64(file)
+      console.log('Video base64 format:', base64.substring(0, 50) + '...') // Log the beginning of the base64 string
 
-    onUploadVideo?.(base64)
+      if (!base64.startsWith('data:video/')) {
+        alert('Invalid video format.')
+        return
+      }
+
+      onUploadVideo?.(base64)
+    } catch (error) {
+      console.error('Error converting video to base64:', error)
+      alert('Failed to process the video. Please try another one.')
+    }
   }
 
   if (preview) {

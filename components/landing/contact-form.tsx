@@ -89,19 +89,6 @@ export default function ContactForm() {
           />
         </div>
 
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium mb-1">
-            Phone Number
-          </label>
-          <Input
-            id="phone"
-            name="phone"
-            placeholder="Enter your phone number"
-            value={formData.phone}
-            onChange={handleChange}
-            required
-          />
-        </div>
 
         <div>
           <label htmlFor="reason" className="block text-sm font-medium mb-1">
@@ -136,7 +123,7 @@ export default function ContactForm() {
         </div>
 
         <Button type="submit" className="w-full bg-rose-900 hover:bg-rose-800">
-          Sign Up
+          Submit
         </Button>
       </div>
     </form>

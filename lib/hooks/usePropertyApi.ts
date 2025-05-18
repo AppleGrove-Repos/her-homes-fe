@@ -37,7 +37,6 @@ interface ApiResponse<T> {
   limit?: number
 }
 
-// Filter params interface
 export interface PropertyFilterParams {
   page?: number
   limit?: number
@@ -48,7 +47,14 @@ export interface PropertyFilterParams {
   location?: string
   moreFilters?: string
   status?: string
+  minPrice?: number
+  maxPrice?: number
+  minBedrooms?: number
+  maxBedrooms?: number
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
 }
+
 
 // Get property by ID - no auth required
 export const useGetProperty = (propertyId: string) => {
@@ -109,7 +115,10 @@ export const useGetPropertyListings = (filters?: PropertyFilterParams) => {
     retry: 1,
   })
 }
-export const useGetDeveloperPropertyListings = (filters?: PropertyFilterParams) => {
+
+export const useGetDeveloperPropertyListings = (
+  filters?: PropertyFilterParams
+) => {
   return useQuery({
     queryKey: ['propertyListings', filters],
     queryFn: async () => {
@@ -131,6 +140,7 @@ export const useGetDeveloperPropertyListings = (filters?: PropertyFilterParams) 
           if (filters.location) queryParams.append('location', filters.location)
           if (filters.moreFilters)
             queryParams.append('moreFilters', filters.moreFilters)
+          if (filters.status) queryParams.append('status', filters.status)
         }
 
         const queryString = queryParams.toString()

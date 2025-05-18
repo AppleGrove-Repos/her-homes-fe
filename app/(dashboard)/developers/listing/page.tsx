@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import {
   PlusCircle,
-  Filter,
   MapPin,
   Bed,
   Home,
   Edit,
   Trash2,
   X,
+  SlidersHorizontal,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -25,7 +25,14 @@ import SelectField from '@/components/common/inputs/select-field'
 import { deleteProperty } from '@/lib/services/developer/developer.services'
 import Button from '@/components/common/button/index'
 import Modal from '@/components/developer/modal'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { Slider } from '@/components/ui/slider'
+import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 const propertyTypes = [
   { label: 'All Types', value: '', id: 'all' },
@@ -44,74 +51,75 @@ const statusOptions = [
   { label: 'Rejected', value: 'rejected', id: 'rejected' },
 ]
 
+const bedroomOptions = [
+  { label: 'Any', value: '', id: 'any' },
+  { label: '1+', value: '1', id: '1plus' },
+  { label: '2+', value: '2', id: '2plus' },
+  { label: '3+', value: '3', id: '3plus' },
+  { label: '4+', value: '4', id: '4plus' },
+  { label: '5+', value: '5', id: '5plus' },
+]
+
+const sortOptions = [
+  { label: 'Newest First', value: 'createdAt:desc', id: 'newest' },
+  { label: 'Oldest First', value: 'createdAt:asc', id: 'oldest' },
+  { label: 'Price: Low to High', value: 'price:asc', id: 'price_asc' },
+  { label: 'Price: High to Low', value: 'price:desc', id: 'price_desc' },
+]
+
 export default function ListingsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState<string>('') // Add activeTab state
   const [filterParams, setFilterParams] = useState<PropertyFilterParams>({})
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null)
-  const {
-    data: propertyResponse,
-    isLoading,
-    isError,
-  } = useGetDeveloperPropertyListings(filterParams)
+  const [activeTab, setActiveTab] = useState<string>('')
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000])
+  const [selectedSort, setSelectedSort] = useState('')
+
+  const { data: propertyResponse, isLoading } =
+    useGetDeveloperPropertyListings(filterParams)
   const properties = propertyResponse?.data || []
 
-  const filteredProperties = activeTab
-    ? properties.filter((p) => p.status === activeTab)
-    : properties
-  // Initialize search query from URL params
-  useEffect(() => {
-    const urlSearchQuery = searchParams.get('searchQuery')
-    if (urlSearchQuery) {
-      setSearchQuery(urlSearchQuery)
-    }
+  // Delete property mutation
+  const deletePropertyMutation = useMutation({
+    mutationFn: (id: string) => deleteProperty(id),
+    onSuccess: () => {
+      toast.success('Property deleted successfully')
+      setDeleteModalOpen(false)
+      setPropertyToDelete(null)
+      queryClient.invalidateQueries({ queryKey: ['propertyListings'] })
+    },
+    onError: (error) => {
+      console.error('Error deleting property:', error)
+      toast.error('Failed to delete property')
+    },
+  })
 
-    // Initialize filter params from URL params
+  // Initialize filters from URL params
+  useEffect(() => {
     const apiFilters: PropertyFilterParams = {}
+
     if (searchParams.get('propertyType'))
       apiFilters.propertyType = searchParams.get('propertyType')!
-    if (searchParams.get('status'))
-      apiFilters.status = searchParams.get('status')!
-    if (searchParams.get('searchQuery'))
-      apiFilters.search = searchParams.get('searchQuery')!
+
+    // Get status from URL and set activeTab
+    const statusParam = searchParams.get('status')
+    if (statusParam) {
+      apiFilters.status = statusParam
+      setActiveTab(statusParam)
+    } else {
+      setActiveTab('')
+    }
+
+    if (searchParams.get('search'))
+      apiFilters.search = searchParams.get('search')!
     apiFilters.limit = 10
+
     setFilterParams(apiFilters)
   }, [searchParams])
-
-  // Function to update URL query params when filters change
-  const applyFilters = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    if (searchQuery) params.set('searchQuery', searchQuery)
-    else params.delete('searchQuery')
-
-    // Update the URL with filters
-    router.push(`/developers/listing?${params.toString()}`)
-
-    // Update filter params for API
-    const apiFilters: PropertyFilterParams = {}
-    if (searchQuery) apiFilters.search = searchQuery
-    apiFilters.limit = 10
-    setFilterParams(apiFilters)
-  }, [searchQuery, router, searchParams])
-
-  const clearSearch = () => {
-    setSearchQuery('')
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete('searchQuery')
-    router.push(`/developers/listing?${params.toString()}`)
-
-    // Update filter params for API
-    setFilterParams((prev) => {
-      const newFilters = { ...prev }
-      delete newFilters.search
-      return newFilters
-    })
-  }
 
   const openDeleteModal = (id: string) => {
     setPropertyToDelete(id)
@@ -120,27 +128,62 @@ export default function ListingsPage() {
 
   const handleDeleteProperty = async () => {
     if (!propertyToDelete) return
-    try {
-      await deleteProperty(propertyToDelete)
-      toast.success('Property deleted successfully')
-      setDeleteModalOpen(false)
-      setPropertyToDelete(null)
-      queryClient.invalidateQueries({ queryKey: ['propertyListings'] })
-    } catch (error) {
-      toast.error('Failed to delete property')
-    }
+    deletePropertyMutation.mutate(propertyToDelete)
   }
 
-  function changeQuery(key: string, value: string): void {
+  // Update the changeQuery function to handle different types of values
+  function changeQuery(key: string, value: string | number | undefined): void {
     const params = new URLSearchParams(searchParams.toString())
-    if (value) params.set(key, value)
-    else params.delete(key)
+
+    if (value !== undefined && value !== '') {
+      params.set(key, value.toString())
+    } else {
+      params.delete(key)
+    }
+
     router.push(`/developers/listing?${params.toString()}`)
+
     setFilterParams((prev) => ({
       ...prev,
       [key]: value || undefined,
     }))
-    if (key === 'status') setActiveTab(value)
+
+    if (key === 'status') {
+      setActiveTab((value as string) || '')
+    }
+  }
+
+  const handleSortChange = (sortValue: string) => {
+    setSelectedSort(sortValue)
+    const [sortBy, sortOrder] = sortValue.split(':')
+    changeQuery('sortBy', sortBy)
+    changeQuery('sortOrder', sortOrder)
+  }
+
+  // Fix the applyPriceRange function
+  const applyPriceRange = () => {
+    changeQuery('minPrice', priceRange[0])
+    changeQuery('maxPrice', priceRange[1])
+  }
+
+  const clearAllFilters = () => {
+    router.push('/developers/listing')
+    setFilterParams({ limit: 10 })
+    setActiveTab('')
+    setPriceRange([0, 10000000])
+    setSelectedSort('')
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      maximumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const handlePriceRangeChange = (newRange: [number, number]) => {
+    setPriceRange(newRange)
   }
 
   return (
@@ -152,7 +195,7 @@ export default function ListingsPage() {
           </h1>
           <p className="text-gray-600">Manage your property listings</p>
         </div>
-        <Link href="/developers/properties/add">
+        <Link href="/developer/properties/add">
           <Button
             variant="filled"
             icon={<PlusCircle className="h-4 w-4" />}
@@ -169,10 +212,7 @@ export default function ListingsPage() {
           <Button
             key={option.id}
             variant={activeTab === option.value ? 'filled' : 'outline'}
-            onClick={() => {
-              setActiveTab(option.value)
-              changeQuery('status', option.value)
-            }}
+            onClick={() => changeQuery('status', option.value)}
             size="extra-small"
             className={
               activeTab === option.value
@@ -220,15 +260,188 @@ export default function ListingsPage() {
             labelClassName="text-[#333333] font-medium"
           />
 
-          <Button
-            variant="outline"
-            className="gap-2 h-[42px] self-end border-[#FF9A8B] text-[#7C0A02] hover:bg-[#FFF0ED]"
-            icon={<Filter className="h-4 w-4" />}
-            iconPosition="left"
+          <SelectField
+            label="Bedrooms"
+            data={bedroomOptions}
+            value={filterParams.bedrooms || ''}
+            onSelect={(option) => changeQuery('bedrooms', option.value)}
+            onClear={() => changeQuery('bedrooms', '')}
+            className="w-full md:w-[150px]"
+            labelClassName="text-[#333333] font-medium"
+          />
+
+          <Popover
+            open={advancedFiltersOpen}
+            onOpenChange={setAdvancedFiltersOpen}
           >
-            More Filters
-          </Button>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="gap-2 h-[42px] self-end border-[#FF9A8B] text-[#7C0A02] hover:bg-[#FFF0ED]"
+                icon={<SlidersHorizontal className="h-4 w-4" />}
+                iconPosition="left"
+              >
+                More Filters
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+              <div className="space-y-4">
+                <h3 className="font-medium text-[#333333]">Advanced Filters</h3>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-sm">Price Range</Label>
+                    <div className="text-xs text-gray-500">
+                      {formatPrice(priceRange[0])} -{' '}
+                      {formatPrice(priceRange[1])}
+                    </div>
+                  </div>
+                  <Slider
+                    defaultValue={priceRange}
+                    min={0}
+                    max={10000000}
+                    step={100000}
+                    value={priceRange}
+                    onValueChange={handlePriceRangeChange}
+                    className="my-4"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm">Sort By</Label>
+                  <select
+                    value={selectedSort}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="w-full border border-[#FFE4E0] rounded-md p-2 text-sm focus:border-[#FF9A8B] focus:ring-[#FF9A8B]/20"
+                  >
+                    <option value="">Default</option>
+                    {sortOptions.map((option) => (
+                      <option key={option.id} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="pt-2 flex justify-between">
+                  <Button
+                    variant="outline"
+                    size="small"
+                    onClick={clearAllFilters}
+                    className="text-sm"
+                  >
+                    Clear All
+                  </Button>
+                  <Button
+                    variant="filled"
+                    size="small"
+                    onClick={() => {
+                      applyPriceRange()
+                      setAdvancedFiltersOpen(false)
+                    }}
+                    className="bg-[#7C0A02] hover:bg-[#600000] text-white text-sm"
+                  >
+                    Apply Filters
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
+
+        {/* Active Filters */}
+        {(filterParams.minPrice ||
+          filterParams.maxPrice ||
+          filterParams.bedrooms ||
+          filterParams.propertyType ||
+          filterParams.status ||
+          filterParams.search) && (
+          <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-[#FFE4E0]">
+            <div className="text-sm text-gray-500 mr-2 pt-1">
+              Active Filters:
+            </div>
+
+            {filterParams.search && (
+              <div className="bg-[#FFF0ED] text-[#7C0A02] px-2 py-1 rounded-full text-xs flex items-center">
+                Search: {filterParams.search}
+                <button
+                  onClick={() => changeQuery('search', '')}
+                  className="ml-1 text-gray-500 hover:text-[#7C0A02]"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            {filterParams.propertyType && (
+              <div className="bg-[#FFF0ED] text-[#7C0A02] px-2 py-1 rounded-full text-xs flex items-center">
+                Type: {filterParams.propertyType}
+                <button
+                  onClick={() => changeQuery('propertyType', '')}
+                  className="ml-1 text-gray-500 hover:text-[#7C0A02]"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            {filterParams.status && (
+              <div className="bg-[#FFF0ED] text-[#7C0A02] px-2 py-1 rounded-full text-xs flex items-center">
+                Status: {filterParams.status}
+                <button
+                  onClick={() => changeQuery('status', '')}
+                  className="ml-1 text-gray-500 hover:text-[#7C0A02]"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            {filterParams.bedrooms && (
+              <div className="bg-[#FFF0ED] text-[#7C0A02] px-2 py-1 rounded-full text-xs flex items-center">
+                Bedrooms: {filterParams.bedrooms}+
+                <button
+                  onClick={() => changeQuery('bedrooms', '')}
+                  className="ml-1 text-gray-500 hover:text-[#7C0A02]"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            {(filterParams.minPrice || filterParams.maxPrice) && (
+              <div className="bg-[#FFF0ED] text-[#7C0A02] px-2 py-1 rounded-full text-xs flex items-center">
+                Price:{' '}
+                {filterParams.minPrice
+                  ? formatPrice(filterParams.minPrice)
+                  : '₦0'}{' '}
+                -{' '}
+                {filterParams.maxPrice
+                  ? formatPrice(filterParams.maxPrice)
+                  : 'Any'}
+                <button
+                  onClick={() => {
+                    changeQuery('minPrice', undefined)
+                    changeQuery('maxPrice', undefined)
+                    setPriceRange([0, 10000000])
+                  }}
+                  className="ml-1 text-gray-500 hover:text-[#7C0A02]"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              size="extra-small"
+              onClick={clearAllFilters}
+              className="text-xs border-[#FFE4E0] text-gray-500 hover:bg-[#FFF0ED]"
+            >
+              Clear All
+            </Button>
+          </div>
+        )}
       </Card>
 
       {isLoading ? (
@@ -240,8 +453,8 @@ export default function ListingsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.length > 0 ? (
-            filteredProperties.map((property) => (
+          {properties.length > 0 ? (
+            properties.map((property) => (
               <PropertyCard
                 key={property._id}
                 property={{
@@ -251,10 +464,7 @@ export default function ListingsPage() {
                     | 'approved'
                     | 'rejected',
                 }}
-                onDelete={() => {
-                  setPropertyToDelete(property._id)
-                  setDeleteModalOpen(true)
-                }}
+                onDelete={() => openDeleteModal(property._id)}
               />
             ))
           ) : (
@@ -303,6 +513,7 @@ export default function ListingsPage() {
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}
               className="border-[#FF9A8B] text-[#7C0A02] hover:bg-[#FFF0ED]"
+              disabled={deletePropertyMutation.isPending}
             >
               Cancel
             </Button>
@@ -310,8 +521,9 @@ export default function ListingsPage() {
               variant="destructive"
               onClick={handleDeleteProperty}
               className="bg-[#7C0A02] hover:bg-[#600000] text-white"
+              disabled={deletePropertyMutation.isPending}
             >
-              Delete
+              {deletePropertyMutation.isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </div>
         </div>
@@ -397,7 +609,7 @@ function PropertyCard({
 
         <div className="flex flex-col sm:flex-row justify-between gap-3 mt-4 pt-4 border-t border-[#FFE4E0]">
           <Link
-            href={`/properties/${property._id}`}
+            href={`/developer/properties/${property._id}`}
             className="w-full sm:w-auto"
           >
             <Button
@@ -409,7 +621,7 @@ function PropertyCard({
             </Button>
           </Link>
           <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
-            <Link href={`/properties/edit/${property._id}`}>
+            <Link href={`/developer/properties/edit/${property._id}`}>
               <Button
                 variant="outline"
                 size="extra-small"

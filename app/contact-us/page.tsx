@@ -21,7 +21,7 @@ const LiveMap = dynamic(() => import('@/components/landing/live-map'), {
 
 export default function ContactPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col bg-white overflow-hidden">
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}

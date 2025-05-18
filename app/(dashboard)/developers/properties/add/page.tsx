@@ -21,7 +21,7 @@ import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { useQueryClient } from '@tanstack/react-query'
 import VideoUploader from '@/components/developer/video-uploader'
-import ImageUploader from '@/components/developer/image-uploader'
+import ImageUploaderComponent from '@/components/developer/image-uploader'
 
 // Define the property types
 const propertyTypes = [
@@ -80,12 +80,40 @@ export default function AddPropertyPage() {
 
   // Watch the property type to use in the UI
   const selectedPropertyType = watch('propertyType')
+
+  // Fix the fileToBase64 function to handle errors better
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error('No file provided'))
+        return
+      }
+
       const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
-      reader.readAsDataURL(file)
+
+      reader.onload = () => {
+        try {
+          const result = reader.result
+          if (!result || typeof result !== 'string') {
+            reject(new Error('Failed to convert file to base64'))
+            return
+          }
+          resolve(result)
+        } catch (error) {
+          reject(error)
+        }
+      }
+
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error)
+        reject(new Error('Error reading file'))
+      }
+
+      try {
+        reader.readAsDataURL(file)
+      } catch (error) {
+        reject(error)
+      }
     })
 
   // Handle property type selection
@@ -115,22 +143,25 @@ export default function AddPropertyPage() {
   }, [videos])
 
   const queryClient = useQueryClient()
-  // Handle form submission
+  // Fix potential issues in the form submission function
   const onSubmit = async (data: PropertyFormData) => {
     setIsSubmitting(true)
     setImageError('')
 
-    if (images.length === 0) {
-      setImageError('At least one image is required.')
-      setIsSubmitting(false)
-      return
-    }
-
     try {
+      // Validate images
+      if (images.length === 0) {
+        setImageError('At least one image is required.')
+        setIsSubmitting(false)
+        return
+      }
+
       // Ensure all images are valid base64 strings
-      const validImages = images.filter(
-        (img) => img && typeof img === 'string' && img.startsWith('data:image/')
-      )
+      const validImages = images.filter((img) => {
+        if (!img || typeof img !== 'string') return false
+        // Check if it's a valid base64 image string
+        return img.startsWith('data:image/')
+      })
 
       if (validImages.length === 0) {
         setImageError('At least one valid image is required.')
@@ -138,26 +169,46 @@ export default function AddPropertyPage() {
         return
       }
 
-      // Ensure all videos are valid base64 strings
-      const validVideos = videos.filter(
-        (vid) => vid && typeof vid === 'string' && vid.startsWith('data:video/')
-      )
+      // Ensure all videos are valid base64 strings (if any)
+      const validVideos = videos.filter((vid) => {
+        if (!vid || typeof vid !== 'string') return false
+        // Check if it's a valid base64 video string
+        return vid.startsWith('data:video/')
+      })
 
-      // Make sure both images and videos are included in the submission
+      // Create a clean copy of the data with proper string conversions
       const enrichedData = {
         ...data,
-        images: validImages, // Only send valid base64 image strings
-        videos: validVideos, // Only send valid base64 video strings
+        // Ensure all numeric values are properly converted to strings
+        price: data.price ? data.price.toString() : '0',
+        minDownPaymentPercent: data.minDownPaymentPercent
+          ? data.minDownPaymentPercent.toString()
+          : '0',
+        minMonthlyPayment: data.minMonthlyPayment
+          ? data.minMonthlyPayment.toString()
+          : '0',
+        bedrooms: data.bedrooms ? data.bedrooms.toString() : '0',
+        // Use the validated arrays
+        images: validImages,
+        videos: validVideos,
       }
 
-      console.log('Submitting data:', enrichedData)
+      console.log('Submitting data:', {
+        ...enrichedData,
+        images: `${enrichedData.images.length} valid images`,
+        videos: `${enrichedData.videos.length} valid videos`,
+      })
 
       await createProperty(enrichedData)
 
       toast.success('Property added successfully!')
-      router.push('/developers/listing')
-    } catch (error) {
-      toast.error('Failed to add property. Please try again.')
+      // Set a timeout to redirect after 5 seconds
+      setTimeout(() => {
+        router.push('/developers/listing')
+      }, 3000)
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Please try again.'
+      toast.error(`Failed to add property: ${errorMessage}`)
       console.error('Error adding property:', error)
     } finally {
       setIsSubmitting(false)
@@ -289,7 +340,7 @@ export default function AddPropertyPage() {
                 </div>
               ))}
               {images.length < 5 && (
-                <ImageUploader onUploadImage={handleAddImage} />
+                <ImageUploaderComponent onUploadImage={handleAddImage} />
               )}
             </div>
             <p className="text-xs text-gray-500">

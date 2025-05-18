@@ -1,5 +1,7 @@
 'use client'
 
+import type React from 'react'
+
 import Image from 'next/image'
 import type { FC } from 'react'
 import { BiTrash, BiUpload } from 'react-icons/bi'
@@ -31,36 +33,50 @@ const ImageUploader: FC<Props> = ({
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
+      reader.onload = () => {
+        try {
+          const result = reader.result as string
+          if (!result || typeof result !== 'string') {
+            reject(new Error('Failed to convert file to base64'))
+            return
+          }
+          resolve(result)
+        } catch (error) {
+          reject(error)
+        }
+      }
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error)
+        reject(error)
+      }
       reader.readAsDataURL(file)
     })
 
-    const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      e.target.value = '' // ✅ Reset input value to allow re-upload of the same file
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // ✅ Reset input value to allow re-upload of the same file
 
-      if (!file) return
+    if (!file) return
 
-      if (!file.type.startsWith('image/')) {
-        alert('Only image files are allowed.')
-        return
-      }
-
-      const base64 = await fileToBase64(file)
-      if (!base64.startsWith('data:image/')) {
-        alert('Invalid image format.')
-        return
-      }
-
-      onUploadImage?.(base64)
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files are allowed.')
+      return
     }
-    
+
+    const base64 = await fileToBase64(file)
+    if (!base64.startsWith('data:image/')) {
+      alert('Invalid image format.')
+      return
+    }
+
+    onUploadImage?.(base64)
+  }
+
   if (preview) {
     return (
       <div className="w-full h-[120px] rounded-md border-4 relative">
         <Image
-          src={preview}
+          src={preview || '/placeholder.svg'}
           alt="image-uploader-image"
           width={600}
           height={200}
