@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { Key, Lock, Unlock } from 'lucide-react'
 import { useAuth } from '@/lib/store/auth.store'
@@ -12,6 +13,7 @@ import { https } from '@/lib/config/axios.config'
 import { errorHandler } from '@/lib/config/axios-error'
 import { Input } from '@/components/ui/input'
 import Button from '@/components/common/button/index'
+import toast from 'react-hot-toast'
 
 interface LoginFormData {
   email: string
@@ -24,6 +26,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [debugInfo, setDebugInfo] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [redirectUrl, setRedirectUrl] = useState('')
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -72,9 +75,8 @@ export default function Login() {
           : 'Failed to sign in. Please check your credentials.'
       )
 
-      if (process.env.NODE_ENV === 'development') {
-        setDebugInfo(JSON.stringify(error.response?.data || error.message))
-      }
+      // Add this to prevent form submission from causing a page reload
+      return false
     },
     onSuccess: (data) => {
       // Extract tokens from the response
@@ -92,6 +94,7 @@ export default function Login() {
       setUser(userData)
 
       console.log('Login successful, user role:', userData.role)
+      toast.success('Login successful!')
 
       // Redirect based on user role or redirect URL
       if (redirectUrl && redirectUrl !== '/') {
@@ -113,6 +116,14 @@ export default function Login() {
   const submit = (data: LoginFormData) => {
     setErrorMessage('')
     loginMutation.mutate(data)
+
+    // Prevent form submission from causing a page reload when there's an error
+    if (loginMutation.isError) {
+      return false
+    }
+  }
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
   }
 
   const getDestinationName = () => {
@@ -126,6 +137,13 @@ export default function Login() {
       return 'continue'
     }
   }
+
+  // Add this useEffect after your other useEffect
+  useEffect(() => {
+    if (errorMessage && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [errorMessage])
 
   return (
     <div className="flex min-h-screen flex-col bg-white overflow-hidden">
@@ -299,14 +317,12 @@ export default function Login() {
             <p className="text-gray-600">
               Log in to continue your journey to homeownership.
             </p>
-
             {/* Show redirect destination if available */}
             {redirectUrl && redirectUrl !== '/' && (
               <div className="mt-2 text-sm text-[#7C0A02] bg-red-50 p-2 rounded-md border border-red-100">
                 Sign in to {getDestinationName()}
               </div>
             )}
-
             {errorMessage && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md mb-4 mt-4 flex items-start">
                 <svg
@@ -322,13 +338,6 @@ export default function Login() {
                   />
                 </svg>
                 <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {/* Debug info - only visible during development */}
-            {process.env.NODE_ENV === 'development' && debugInfo && (
-              <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-3 rounded-md mb-4 mt-4 text-xs">
-                <strong>Debug:</strong> {debugInfo}
               </div>
             )}
 
@@ -361,19 +370,29 @@ export default function Login() {
                 <label htmlFor="password" className="block text-sm font-medium">
                   Password
                 </label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  {...register('password', {
-                    required: 'Password is required',
-                    minLength: {
-                      value: 6,
-                      message: 'Password must be at least 6 characters',
-                    },
-                  })}
-                  className="w-full"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    {...register('password', {
+                      required: 'Password is required',
+                      minLength: {
+                        value: 6,
+                        message: 'Password must be at least 6 characters',
+                      },
+                    })}
+                    className="w-full"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                    onClick={togglePasswordVisibility}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+
                 {errors.password && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.password.message}

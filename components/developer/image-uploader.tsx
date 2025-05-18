@@ -3,10 +3,11 @@
 import Image from 'next/image'
 import type { FC } from 'react'
 import { BiTrash, BiUpload } from 'react-icons/bi'
+import { useEffect, useState } from 'react'
 
 interface Props {
-  uploaded_image?: File
-  onUploadImage?(file: File): void
+  uploaded_image?: string // Now it's a base64 string, not File
+  onUploadImage?(base64: string): void
   onRemoveImage?(): void
   id?: string
 }
@@ -17,11 +18,49 @@ const ImageUploader: FC<Props> = ({
   onUploadImage,
   onRemoveImage,
 }) => {
-  if (uploaded_image) {
+  const [preview, setPreview] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (uploaded_image?.startsWith('data:image/')) {
+      setPreview(uploaded_image)
+    } else {
+      setPreview(null)
+    }
+  }, [uploaded_image])
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+
+    const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      e.target.value = '' // ✅ Reset input value to allow re-upload of the same file
+
+      if (!file) return
+
+      if (!file.type.startsWith('image/')) {
+        alert('Only image files are allowed.')
+        return
+      }
+
+      const base64 = await fileToBase64(file)
+      if (!base64.startsWith('data:image/')) {
+        alert('Invalid image format.')
+        return
+      }
+
+      onUploadImage?.(base64)
+    }
+    
+  if (preview) {
     return (
       <div className="w-full h-[120px] rounded-md border-4 relative">
         <Image
-          src={URL.createObjectURL(uploaded_image) || '/placeholder.svg'}
+          src={preview}
           alt="image-uploader-image"
           width={600}
           height={200}
@@ -42,7 +81,7 @@ const ImageUploader: FC<Props> = ({
     <>
       <label
         htmlFor={id}
-        className="border-2 border-dashed rounded-md bg-gray-200 px-6 py-8 flex flex-col items-center border-primary cursor-pointer"
+        className="flex flex-col items-center justify-center gap-2 w-full h-52 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
       >
         <BiUpload size={25} />
         <p className="text-[.9rem] font-semibold text-gray-600 mt-2">
@@ -51,7 +90,7 @@ const ImageUploader: FC<Props> = ({
       </label>
 
       <input
-        onChange={(e) => onUploadImage?.(e.target.files?.[0]!)}
+        onChange={handleChange}
         type="file"
         className="hidden"
         id={id}

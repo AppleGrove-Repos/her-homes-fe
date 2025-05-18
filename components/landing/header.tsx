@@ -56,7 +56,7 @@ export default function Header() {
           >
             Apply for Financing
           </Link>
-          <Link href="#" className="text-sm font-medium hover:text-[#e6a287]">
+          <Link href="/contact-us" className="text-sm font-medium hover:text-[#e6a287]">
             Contact Us
           </Link>
         </nav>

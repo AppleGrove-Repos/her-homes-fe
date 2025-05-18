@@ -627,6 +627,7 @@ function ApplicantDashboard() {
                   location={property.location}
                   price={`₦${property.price.toLocaleString()}`}
                   monthlyPayment={`₦${property.minMonthlyPayment.toLocaleString()}`}
+                  minDownPaymentPercent={`${property.minDownPaymentPercent.toLocaleString()}% Down Payment`}
                   rating={property.rating}
                   tags={property.tags || []}
                   imageUrl={
@@ -682,8 +683,6 @@ function ApplicantDashboard() {
             </div>
           </div>
         )}
-
-    
       </div>
 
       {/* Footer */}

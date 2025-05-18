@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { API_URL } from '../constants/env'
-import { Cookie } from 'lucide-react'
 
 // Create axios instance with base URL and credentials
 export const https = axios.create({
@@ -68,8 +67,14 @@ https.interceptors.response.use(
     const originalRequest = error.config
     const status = error.response?.status
 
-    // If the token has expired, attempt to refresh it
-    if (status === 401 && !originalRequest._retry) {
+    // Skip token refresh for login/signup endpoints
+    const isAuthEndpoint =
+      originalRequest.url &&
+      (originalRequest.url.includes('/auth/signin') ||
+        originalRequest.url.includes('/auth/signup'))
+
+    // If the token has expired AND it's not a login/signup request, attempt to refresh it
+    if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true // Prevent infinite retry loops
 
       try {

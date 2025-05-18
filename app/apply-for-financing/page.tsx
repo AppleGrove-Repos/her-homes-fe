@@ -22,6 +22,9 @@ export default function ApplyFinancing() {
     maximumMonthlyPayment: '',
     ownExistingProperty: '',
     documents: [] as File[],
+    bvn: '',
+    documentType: '',
+    documentImage: null as File | null,
   })
 
   const [submitted, setSubmitted] = useState(false)
@@ -66,7 +69,16 @@ export default function ApplyFinancing() {
       }, 1000)
     }
   }
-
+  const handleDocumentImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({
+        ...formData,
+        documentImage: e.target.files[0],
+      })
+    }
+  }
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
 
@@ -188,6 +200,23 @@ export default function ApplyFinancing() {
               placeholder="Enter your phone number"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-maroon-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="bvn" className="block text-sm font-medium mb-1">
+              Bank Verification Number (BVN)*
+            </label>
+            <input
+              type="text"
+              id="bvn"
+              name="bvn"
+              value={formData.bvn}
+              onChange={handleInputChange}
+              placeholder="Enter your BVN"
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-maroon-500"
+              maxLength={11}
+              pattern="\d*"
             />
           </div>
 
@@ -350,10 +379,84 @@ export default function ApplyFinancing() {
               </label>
             </div>
           </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Upload a Valid ID Document*
+            </label>
+            <div className="flex gap-4 mb-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="documentType"
+                  value="national_id"
+                  checked={formData.documentType === 'national_id'}
+                  onChange={handleInputChange}
+                  className="form-radio text-maroon-600"
+                />
+                <span className="ml-2 text-sm">National ID Card</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="documentType"
+                  value="drivers_license"
+                  checked={formData.documentType === 'drivers_license'}
+                  onChange={handleInputChange}
+                  className="form-radio text-maroon-600"
+                />
+                <span className="ml-2 text-sm">Driver's License</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="documentType"
+                  value="passport_card"
+                  checked={formData.documentType === 'passport_card'}
+                  onChange={handleInputChange}
+                  className="form-radio text-maroon-600"
+                />
+                <span className="ml-2 text-sm">National Passport Card</span>
+              </label>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleDocumentImageUpload}
+              className="block w-full text-sm text-gray-500
+      file:mr-4 file:py-2 file:px-4
+      file:rounded-md file:border-0
+      file:text-sm file:font-semibold
+      file:bg-maroon-50 file:text-maroon-700
+      hover:file:bg-maroon-100
+    "
+              required
+            />
+            {formData.documentImage && (
+              <div className="mt-2 flex items-center gap-2">
+                <img
+                  src={URL.createObjectURL(formData.documentImage)}
+                  alt="Document Preview"
+                  className="h-16 rounded border"
+                />
+                <span className="text-xs text-gray-600">
+                  {formData.documentImage.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, documentImage: null })
+                  }
+                  className="text-red-500 text-xs ml-2"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Upload Identification Documents*
+              Upload other Documents*
             </label>
             <p className="text-xs text-gray-500 mb-2">
               Make sure to upload both the front and back of the document for

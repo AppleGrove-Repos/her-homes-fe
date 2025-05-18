@@ -11,6 +11,8 @@ export interface Property {
   name: string
   description: string
   bedrooms: number
+  // images: string[] 
+  // videos: string[]
   location: string
   price: number
   propertyType: string
@@ -25,12 +27,13 @@ export interface CreatePropertyDto {
   name: string
   description: string
   bedrooms: string
+  images: string[]
+  videos: string[]
   location: string
-  price: string // <-- change to string
+  price: string
   propertyType: string
-  minDownPaymentPercent: string // <-- change to string
+  minDownPaymentPercent: string
   minMonthlyPayment: string
-  status?: 'pending' | 'approved' | 'rejected'
 }
 
 export interface SearchProperties {
@@ -88,8 +91,7 @@ export const getPropertyById = async (propertyId: string) => {
 // Create a new property
 export const createProperty = async (data: CreatePropertyDto) => {
   try {
-    // No need to manually get the token or add it to headers
-    // The interceptor will handle that
+    console.log('Sending payload:', data)
     const response = await https.post('/listing', data)
 
     toast.success('Property created successfully')

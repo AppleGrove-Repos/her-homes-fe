@@ -16,6 +16,7 @@ interface PropertyCardProps {
   location: string
   price: string
   monthlyPayment: string
+  minDownPaymentPercent: string
   rating: number
   tags?: string[]
   imageUrl: string
@@ -32,6 +33,7 @@ export default function PropertyCard({
   monthlyPayment,
   rating,
   tags = [],
+  minDownPaymentPercent,
   imageUrl,
   onClick,
 }: PropertyCardProps) {
@@ -66,13 +68,13 @@ export default function PropertyCard({
     // If authenticated, navigate to the appropriate page
     switch (action) {
       case 'contact':
-        router.push(`/user/listings/${id}/contact`)
+        router.push(`/listing/user/${id}/contact`)
         break
       case 'mortgage':
-        router.push(`/user/listings/${id}/mortgage`)
+        router.push(`/listing/user${id}/mortgage`)
         break
       case 'view-more':
-        router.push(`/user/listings/${id}`)
+        router.push(`/listing/user${id}`)
         break
       default:
         router.push(`/listing/${id}`)
@@ -146,11 +148,11 @@ export default function PropertyCard({
             <p className="font-bold text-lg">{price}</p>
           </div>
           <div className="text-right">
-            <p className="font-bold text-lg">
+            <p className="font-bold text-[12px] md:text-lg">
               {monthlyPayment}{' '}
               <span className="text-sm font-normal">/ Mon</span>
             </p>
-            <p className="text-[10px] text-gray-500">30% Down Payment</p>
+            <p className="text-[10px] text-gray-500">{minDownPaymentPercent}</p>
           </div>
         </div>
 
@@ -158,13 +160,13 @@ export default function PropertyCard({
         <div className="grid grid-cols-2 gap-3">
           <Button
             variant="outline"
-            className="text-sm border-black"
+            className="text-[10px] md:text-sm border-black"
             onClick={(e) => handleActionClick('contact', e)}
           >
             Contact Agent
           </Button>
           <Button
-            className="bg-[#7C0A02] hover:bg-[#600000] text-white text-sm"
+            className="bg-[#7C0A02] hover:bg-[#600000] text-white text-[10px] md:text-sm"
             onClick={(e) => handleActionClick('mortgage', e)}
           >
             Apply for Mortgage

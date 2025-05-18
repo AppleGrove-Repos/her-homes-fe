@@ -2,7 +2,7 @@
 
 import type React from 'react'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/store/auth.store'
 
@@ -13,35 +13,52 @@ export default function ApplicantDashboardLayout({
 }) {
   const { user, isAuthenticated, fetchUser } = useAuth()
   const router = useRouter()
+    const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
+useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check if user is authenticated
-        if (!isAuthenticated) {
+        // First check if we already have a user in the store
+        if (!user) {
+          // If not, try to fetch the user
           await fetchUser()
 
-          if (!user) {
+          // After fetching, check again if we have a user
+          const currentUser = useAuth.getState().user
+
+          if (!currentUser) {
+            console.log('No user found after fetch, redirecting to login')
             router.push('/login?redirect=/applicant')
-          } else if (user.role !== 'applicant') {
-            // Redirect to appropriate dashboard if not an applicant
-            router.push(`/dashboard/${user.role}`)
+            return
           }
-        } else if (user && user.role !== 'applicant') {
-          // Redirect if authenticated but not an applicant
-          router.push(`/dashboard/${user.role}`)
+
+          // Check if user has the correct role
+          if (currentUser.role !== 'applicant') {
+            console.log(`User has role ${currentUser.role}, redirecting`)
+            router.push(`/${currentUser.role}`)
+            return
+          }
+        } else if (user.role !== 'applicant') {
+          // If we already have a user but wrong role
+          console.log(`User has role ${user.role}, redirecting`)
+          router.push(`/${user.role}`)
+          return
         }
+
+        // If we reach here, authentication is successful
+        setIsLoading(false)
       } catch (error) {
         console.error('Authentication check failed:', error)
-        router.push('/login')
+        router.push('/login?redirect=/developers')
       }
     }
 
     checkAuth()
-  }, [isAuthenticated, user, router, fetchUser])
+  }, [user, router, fetchUser]) // Ensure dependencies are correct
+
 
   // If not authenticated, show loading state
-  if (!isAuthenticated || !user) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#F1F1F1]">
         <div className="flex flex-col items-center">

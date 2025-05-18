@@ -118,6 +118,9 @@ function VerifyContent() {
                       <br />
                       Please check your inbox and follow the instructions to
                       verify your account.
+                      <span>
+                        Cant't find the mail, Check your spam folder
+                      </span>
                     </p>
                   </>
                 )}

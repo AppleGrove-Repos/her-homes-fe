@@ -2,6 +2,7 @@ import type { Metadata } from 'next/types'
 import { sora } from '@/lib/utils/fonts'
 import './globals.css'
 import Providers from '@/lib/providers/reactQuery.provider'
+import { Toaster } from 'react-hot-toast'
 
 
 
@@ -38,6 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Toaster position="bottom-right" />
       <body className={`${sora.className} antialiased`}>
         <Providers>{children}</Providers>
       </body>

@@ -21,7 +21,6 @@ export interface ApplicantSignupData {
   lastName: string
   gender: 'male' | 'female' | 'other'
   dateOfBirth: string
-  annualIncome: string
   employmentStatus: string
   location: string
 }

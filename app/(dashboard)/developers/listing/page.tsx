@@ -15,7 +15,7 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 import {
-  useGetPropertyListings,
+  useGetDeveloperPropertyListings,
   type PropertyFilterParams,
 } from '@/lib/hooks/usePropertyApi'
 import { toast } from 'sonner'
@@ -57,7 +57,7 @@ export default function ListingsPage() {
     data: propertyResponse,
     isLoading,
     isError,
-  } = useGetPropertyListings(filterParams)
+  } = useGetDeveloperPropertyListings(filterParams)
   const properties = propertyResponse?.data || []
 
   const filteredProperties = activeTab

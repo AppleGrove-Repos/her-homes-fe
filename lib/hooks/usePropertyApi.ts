@@ -1,4 +1,4 @@
-import { https } from '@/lib/config/axios.config'
+import { https, http } from '@/lib/config/axios.config'
 import { errorHandler } from '@/lib/utils/error'
 import toast from 'react-hot-toast'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -73,6 +73,43 @@ export const useGetProperty = (propertyId: string) => {
 
 // Get property listings with filters - no auth required
 export const useGetPropertyListings = (filters?: PropertyFilterParams) => {
+  return useQuery({
+    queryKey: ['propertyListings', filters],
+    queryFn: async () => {
+      try {
+        // Build query string from filters
+        const queryParams = new URLSearchParams()
+
+        if (filters) {
+          // Handle each filter parameter according to the API requirements
+          if (filters.page) queryParams.append('page', filters.page.toString())
+          if (filters.limit)
+            queryParams.append('limit', filters.limit.toString())
+          if (filters.search) queryParams.append('search', filters.search)
+          if (filters.propertyType)
+            queryParams.append('propertyType', filters.propertyType)
+          if (filters.priceRange)
+            queryParams.append('priceRange', filters.priceRange)
+          if (filters.bedrooms) queryParams.append('bedrooms', filters.bedrooms)
+          if (filters.location) queryParams.append('location', filters.location)
+          if (filters.moreFilters)
+            queryParams.append('moreFilters', filters.moreFilters)
+        }
+
+        const queryString = queryParams.toString()
+        const response = await http.get<ApiResponse<Property[]>>(
+          `/listing/${queryString ? `?${queryString}` : ''}`
+        )
+        return response.data
+      } catch (error) {
+        errorHandler(error)
+        throw error
+      }
+    },
+    retry: 1,
+  })
+}
+export const useGetDeveloperPropertyListings = (filters?: PropertyFilterParams) => {
   return useQuery({
     queryKey: ['propertyListings', filters],
     queryFn: async () => {

@@ -41,7 +41,6 @@ export default function ApplicantSignupForm() {
     lastName: '',
     gender: 'male',
     dateOfBirth: '',
-    annualIncome: '',
     employmentStatus: '',
     location: '',
   })
@@ -200,7 +199,6 @@ export default function ApplicantSignupForm() {
   const validateStep2 = () => {
     if (
       !formData.employmentStatus ||
-      !formData.annualIncome ||
       !formData.location.trim()
     ) {
       setFormError('Please fill in all required fields for this step')
@@ -340,27 +338,6 @@ export default function ApplicantSignupForm() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="annualIncome">
-                Annual income<span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-400 font-bold">NGN</span>
-                </div>
-                <Input
-                  id="annualIncome"
-                  name="annualIncome"
-                  type="number" 
-                  min="0"
-                  step="0.01"
-                  className="pl-14"
-                  value={formData.annualIncome || ''}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="location">
