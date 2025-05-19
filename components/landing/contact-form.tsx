@@ -3,9 +3,11 @@
 import type React from 'react'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import Button  from '@/components/common/button/index'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Toaster, toast } from 'react-hot-toast'
+
 import {
   Select,
   SelectContent,
@@ -38,7 +40,22 @@ export default function ContactForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     console.log('Form submitted:', formData)
-    // Add your form submission logic here
+
+    // Example submission logic (e.g., send data to API)
+    // await sendToBackend(formData)
+
+    // Clear form
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      reason: '',
+      message: '',
+   })
+
+    // Show toast
+    toast.success('Form submitted successfully!')
   }
 
   return (
@@ -122,7 +139,7 @@ export default function ContactForm() {
           />
         </div>
 
-        <Button type="submit" className="w-full bg-rose-900 hover:bg-rose-800">
+        <Button type="submit"  className="w-full min-w-[100%] text-center pl-40 text-white bg-rose-900 hover:bg-rose-800">
           Submit
         </Button>
       </div>
