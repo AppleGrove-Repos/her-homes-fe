@@ -123,11 +123,11 @@ export const useGetDeveloperPropertyListings = (
     queryKey: ['propertyListings', filters],
     queryFn: async () => {
       try {
-        // Build query string from filters
+        
         const queryParams = new URLSearchParams()
 
         if (filters) {
-          // Handle each filter parameter according to the API requirements
+          
           if (filters.page) queryParams.append('page', filters.page.toString())
           if (filters.limit)
             queryParams.append('limit', filters.limit.toString())

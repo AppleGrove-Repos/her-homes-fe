@@ -5,6 +5,8 @@ import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/store/auth.store'
+import ApplicantHeader from '@/components/applicants/applicant-header'
+
 
 export default function ApplicantDashboardLayout({
   children,
@@ -69,5 +71,10 @@ useEffect(() => {
     )
   }
 
-  return <>{children}</>
+  return (
+    <>
+      <ApplicantHeader notifications={3} />
+      {children}
+    </>
+  )
 }

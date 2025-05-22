@@ -54,36 +54,7 @@ export default function ApplicantProfilePage() {
   return (
     <div className="min-h-screen bg-[#F1F1F1]">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center">
-            <Image
-              src="/assets/images/header-logo.png"
-              alt="Her Homes"
-              width={35}
-              height={35}
-              className="mr-20 md:ml-20"
-            />
-            <nav className="hidden md:flex space-x-6">
-              <a
-                href="/listings"
-                className="text-gray-700 hover:text-[#7C0A02]"
-              >
-                Browse Listings
-              </a>
-              <a
-                href="/financing"
-                className="text-gray-700 hover:text-[#7C0A02]"
-              >
-                Apply for Financing
-              </a>
-              <a href="/contact" className="text-gray-700 hover:text-[#7C0A02]">
-                Contact Us
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
+      
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Back button */}

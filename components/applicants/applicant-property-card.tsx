@@ -24,7 +24,7 @@ interface PropertyCardProps {
   isSaved: boolean
 }
 
-export default function PropertyCard({
+export default function ApplicantPropertyCard({
   id,
   name,
   type,
@@ -53,7 +53,7 @@ export default function PropertyCard({
       return
     }
 
-    router.push(`/listings/${id}`)
+    router.push(`/applicant/listing/${id}`)
   }
 
   const handleActionClick = (action: string, e: React.MouseEvent) => {

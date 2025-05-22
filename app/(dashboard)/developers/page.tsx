@@ -22,6 +22,8 @@ export default function DeveloperDashboard() {
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
 
+  console.log('User object:', user)
+
   useEffect(() => {
     const fetchProperties = async () => {
       try {

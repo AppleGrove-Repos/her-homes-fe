@@ -609,7 +609,7 @@ function PropertyCard({
 
         <div className="flex flex-col sm:flex-row justify-between gap-3 mt-4 pt-4 border-t border-[#FFE4E0]">
           <Link
-            href={`/developer/properties/${property._id}`}
+            href={`/developers/properties/${property._id}`}
             className="w-full sm:w-auto"
           >
             <Button
@@ -621,7 +621,7 @@ function PropertyCard({
             </Button>
           </Link>
           <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
-            <Link href={`/developer/properties/edit/${property._id}`}>
+            <Link href={`/developers/properties/edit/${property._id}`}>
               <Button
                 variant="outline"
                 size="extra-small"

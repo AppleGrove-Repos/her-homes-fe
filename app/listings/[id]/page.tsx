@@ -48,7 +48,7 @@ function PropertyDetailPage() {
   const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
-  const { isAuthenticated } = useAuth()
+  const { user } = useAuth()
   const propertyId = params.id as string
 
   // Use React Query hooks - no auth required for viewing property details
@@ -93,7 +93,7 @@ function PropertyDetailPage() {
   const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation()
 
-    if (!isAuthenticated) {
+    if (!user) {
       router.push(`/login?redirect=/listing/${propertyId}&action=favorite`)
       return
     }
@@ -118,7 +118,7 @@ function PropertyDetailPage() {
   const handleActionClick = (action: string, e: React.MouseEvent) => {
     e.preventDefault()
 
-    if (!isAuthenticated) {
+    if (!user) {
       // Store the intended action and property ID in query params
       router.push(`/login?redirect=/listing/${propertyId}&action=${action}`)
       return
@@ -127,10 +127,10 @@ function PropertyDetailPage() {
     // If authenticated, navigate to the appropriate page
     switch (action) {
       case 'contact':
-        router.push(`/user/listings/${propertyId}/contact`)
+        router.push(`/listings/${propertyId}/contact`)
         break
       case 'mortgage':
-        router.push(`/user/listings/${propertyId}/mortgage`)
+        router.push(`/listings/${propertyId}/mortgage`)
         break
       default:
         // Do nothing, stay on the page
@@ -161,7 +161,7 @@ function PropertyDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F1F1F1]">
+      <div className="flex min-h-screen flex-col bg-[#f1f1f1] overflow-hidden">
         <Header />
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
           <div className="flex flex-col items-center">
@@ -176,7 +176,7 @@ function PropertyDetailPage() {
 
   if (error || !property) {
     return (
-      <div className="min-h-screen bg-[#F1F1F1]">
+      <div className="flex min-h-screen flex-col bg-[#f1f1f1] overflow-hidden">
         <Header />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
           <h2 className="text-2xl font-bold text-red-600 mb-4">
@@ -210,7 +210,7 @@ function PropertyDetailPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F1F1F1]">
+    <div className="flex min-h-screen flex-col bg-[#f1f1f1] overflow-hidden">
       <Header />
 
       <main className="flex-grow container mx-auto px-4 py-6 md:py-8 max-w-7xl">
