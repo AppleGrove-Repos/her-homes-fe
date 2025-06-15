@@ -64,7 +64,7 @@ export default function PropertyDetailPage() {
     mutationFn: () => deleteProperty(propertyId),
     onSuccess: () => {
       toast.success('Property deleted successfully')
-      router.push('/developer/listings')
+      router.push('/developers/listing')
       queryClient.invalidateQueries({ queryKey: ['propertyListings'] })
     },
     onError: (error) => {
@@ -84,12 +84,12 @@ export default function PropertyDetailPage() {
           setProperty(data)
         } else {
           toast.error('Property not found')
-          router.push('/developer/listings')
+          router.push('/developers/listing')
         }
       } catch (error) {
         console.error('Error fetching property:', error)
         toast.error('Failed to load property data')
-        router.push('/developer/listings')
+        router.push('/developers/listing')
       } finally {
         setLoading(false)
       }
@@ -191,7 +191,7 @@ export default function PropertyDetailPage() {
           The property you're looking for doesn't exist or has been removed.
         </p>
         <div className="mt-6">
-          <Link href="/developer/listings">
+          <Link href="/developers/listing">
             <Button className="bg-[#7C0A02] text-white hover:bg-[#600000]">
               Back to Listings
             </Button>
@@ -207,7 +207,7 @@ export default function PropertyDetailPage() {
       <div className="sticky top-0 z-10 bg-white shadow-sm px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
-            href="/developer/listings"
+            href="/developers/listing"
             className="text-gray-600 hover:text-[#7C0A02]"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -351,7 +351,7 @@ export default function PropertyDetailPage() {
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
           <Link
-            href={`/developer/properties/edit/${property._id}`}
+            href={`/developers/properties/edit/${property._id}`}
             className="flex-1 md:flex-none"
           >
             <Button

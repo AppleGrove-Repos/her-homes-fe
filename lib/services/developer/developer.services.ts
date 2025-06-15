@@ -73,11 +73,7 @@ export const getPropertyById = async (propertyId: string) => {
     const token = localStorage.getItem('auth_token')
     if (!token) throw new Error('Authentication required')
 
-    const response = await https.post(`${API_URL}/listing/${propertyId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const response = await https.get(`${API_URL}/listing/${propertyId}`)
 
     return response.data.data
   } catch (error: any) {

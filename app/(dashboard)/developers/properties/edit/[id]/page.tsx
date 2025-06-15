@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import Button from '@/components/common/button'
-import { ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, X, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -37,11 +37,6 @@ const propertyTypes = [
 ]
 
 // Define the status options
-const statusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-]
 
 // Define the form data type
 interface PropertyFormData {
@@ -55,7 +50,21 @@ interface PropertyFormData {
   propertyType: string
   minDownPaymentPercent: string
   minMonthlyPayment: string
-  status: 'pending' | 'approved' | 'rejected'
+  // status: 'pending' | 'approved' | 'rejected'
+}
+
+async function urlToBase64(url: string): Promise<string> {
+  const response = await fetch(url)
+  const blob = await response.blob()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') resolve(reader.result)
+      else reject(new Error('Failed to convert to base64'))
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
 
 export default function EditPropertyPage() {
@@ -87,13 +96,11 @@ export default function EditPropertyPage() {
       propertyType: '',
       minDownPaymentPercent: '',
       minMonthlyPayment: '',
-      status: 'pending',
     },
   })
 
   // Watch the property type and status to use in the UI
   const selectedPropertyType = watch('propertyType')
-  const selectedStatus = watch('status')
 
   // Update property mutation
   const updatePropertyMutation = useMutation({
@@ -101,7 +108,7 @@ export default function EditPropertyPage() {
     onSuccess: () => {
       toast.success('Property updated successfully!')
       queryClient.invalidateQueries({ queryKey: ['propertyListings'] })
-      router.push(`/developer/properties/${propertyId}`)
+      router.push(`/developers/properties/${propertyId}`)
     },
     onError: (error) => {
       console.error('Error updating property:', error)
@@ -126,7 +133,7 @@ export default function EditPropertyPage() {
             propertyType: property.propertyType,
             minDownPaymentPercent: property.minDownPaymentPercent.toString(),
             minMonthlyPayment: property.minMonthlyPayment.toString(),
-            status: property.status,
+            // status: property.status,
             images: property.images || [],
             videos: property.videos || [],
           })
@@ -136,12 +143,12 @@ export default function EditPropertyPage() {
           setVideos(property.videos || [])
         } else {
           toast.error('Property not found')
-          router.push('/developer/listings')
+          router.push('/developers/listing')
         }
       } catch (error) {
         console.error('Error fetching property:', error)
         toast.error('Failed to load property data')
-        router.push('/developer/listings')
+        router.push('/developers/listing')
       } finally {
         setIsLoading(false)
       }
@@ -158,9 +165,9 @@ export default function EditPropertyPage() {
   }
 
   // Handle status selection
-  const handleStatusChange = (value: 'pending' | 'approved' | 'rejected') => {
-    setValue('status', value)
-  }
+  // const handleStatusChange = (value: 'pending' | 'approved' | 'rejected') => {
+  //   setValue('status', value)
+  // }
 
   const handleAddImage = (base64: string) => {
     setImages((prev) => [...prev, base64])
@@ -187,7 +194,7 @@ export default function EditPropertyPage() {
   }, [videos, setValue])
 
   // Handle form submission
-  const onSubmit = (data: PropertyFormData) => {
+  const onSubmit = async (data: PropertyFormData) => {
     setImageError('')
 
     // Validate images
@@ -196,29 +203,32 @@ export default function EditPropertyPage() {
       return
     }
 
-    // Ensure all images are valid base64 strings
-    const validImages = images.filter((img) => {
-      if (!img || typeof img !== 'string') return false
-      // Check if it's a valid base64 image string or URL
-      return img.startsWith('data:image/') || img.startsWith('http')
-    })
+    // Convert all images to base64 (even if they are URLs)
+    const base64Images = await Promise.all(
+      images.map(async (img) => {
+        if (img.startsWith('data:image/')) return img
+        if (img.startsWith('http')) return await urlToBase64(img)
+        return img
+      })
+    )
 
-    if (validImages.length === 0) {
+    if (base64Images.length === 0) {
       setImageError('At least one valid image is required.')
       return
     }
 
-    // Ensure all videos are valid base64 strings (if any)
-    const validVideos = videos.filter((vid) => {
-      if (!vid || typeof vid !== 'string') return false
-      // Check if it's a valid base64 video string or URL
-      return vid.startsWith('data:video/') || vid.startsWith('http')
-    })
+    // Convert all videos to base64 (even if they are URLs)
+    const base64Videos = await Promise.all(
+      videos.map(async (vid) => {
+        if (vid.startsWith('data:video/')) return vid
+        if (vid.startsWith('http')) return await urlToBase64(vid)
+        return vid
+      })
+    )
 
     // Create a clean copy of the data with proper string conversions
     const enrichedData = {
       ...data,
-      // Ensure all numeric values are properly converted to strings
       price: data.price ? data.price.toString() : '0',
       minDownPaymentPercent: data.minDownPaymentPercent
         ? data.minDownPaymentPercent.toString()
@@ -227,9 +237,8 @@ export default function EditPropertyPage() {
         ? data.minMonthlyPayment.toString()
         : '0',
       bedrooms: data.bedrooms ? data.bedrooms.toString() : '0',
-      // Use the validated arrays
-      images: validImages,
-      videos: validVideos,
+      images: base64Images,
+      videos: base64Videos,
     }
 
     updatePropertyMutation.mutate(enrichedData)
@@ -247,7 +256,7 @@ export default function EditPropertyPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#FFF0ED] to-white space-y-6 px-4 py-6 md:px-6 lg:px-8">
       <div className="flex items-center gap-4">
         <Link
-          href={`/developer/properties/${propertyId}`}
+          href={`/developers/properties/${propertyId}`}
           className="text-gray-600 hover:text-[#FF9A8B] transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -363,7 +372,7 @@ export default function EditPropertyPage() {
                     onClick={() => handleRemoveImage(idx)}
                     className="absolute top-1 right-1 bg-red-100 rounded p-1"
                   >
-                    Remove
+                    <Trash2 className="h-4 w-4 text-red-600" />
                   </button>
                 </div>
               ))}
@@ -393,7 +402,7 @@ export default function EditPropertyPage() {
                     onClick={() => handleRemoveVideo(idx)}
                     className="absolute top-1 right-1 bg-red-100 rounded p-1"
                   >
-                    Remove
+                    <Trash2 className="h-4 w-4 text-red-600" />
                   </button>
                 </div>
               ))}
@@ -558,7 +567,7 @@ export default function EditPropertyPage() {
               <span className="inline-block w-1.5 h-6 bg-[#FF9A8B] mr-2 rounded-full"></span>
               Status
             </h2>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="status" className="text-[#333333] font-medium">
                 Listing Status
               </Label>
@@ -586,7 +595,7 @@ export default function EditPropertyPage() {
                   {errors.status.message}
                 </p>
               )}
-            </div>
+            </div> */}
           </div>
 
           <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-[#FFE4E0]">
@@ -601,7 +610,6 @@ export default function EditPropertyPage() {
             </Button>
             <Button
               type="submit"
-              loading={updatePropertyMutation.isPending}
               className="px-4 py-2 bg-[#7C0A02] text-white hover:bg-[#600000] shadow-md transition-all duration-200 hover:shadow-lg"
               disabled={updatePropertyMutation.isPending}
             >
