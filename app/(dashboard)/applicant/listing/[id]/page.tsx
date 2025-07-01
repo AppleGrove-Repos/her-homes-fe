@@ -155,17 +155,15 @@ function PropertyDetailPage() {
 
   const handleActionClick = (action: string, e: React.MouseEvent) => {
     e.preventDefault()
-    if (!user) {
-      router.push(`/login?redirect=/listing/${propertyId}&action=${action}`)
-      return
-    }
-
     switch (action) {
       case 'contact':
-        router.push(`/listings/${propertyId}/contact`)
+        router.push(`/applicant/messages?property=${propertyId}`)
         break
       case 'mortgage':
-        router.push(`/listings/${propertyId}/mortgage`)
+        router.push(`/applicant/mortgage?property=${propertyId}`)
+        break
+      case 'callback':
+        router.push(`/applicant/callback?property=${propertyId}`)
         break
       default:
         break
@@ -783,6 +781,7 @@ function PropertyDetailPage() {
                     <Button
                       variant="outline"
                       className="w-full bg-transparent text-[12px] border-[#546B2F] text-[#546B2F] hover:bg-gray-50"
+                      onClick={(e) => handleActionClick('callback', e)}
                     >
                       <Phone className="h-4 w-4 mr-2" />
                       Request Callback

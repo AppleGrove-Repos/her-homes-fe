@@ -64,6 +64,25 @@ export const useGetProperty = (propertyId: string) => {
       try {
         // Direct API call without authentication check
         const response = await https.get<ApiResponse<Property>>(
+          `/listing/${propertyId}/user`
+        )
+        return response.data
+      } catch (error) {
+        errorHandler(error)
+        throw error
+      }
+    },
+    enabled: !!propertyId,
+    retry: 1,
+  })
+}
+export const useGetProperties = (propertyId: string) => {
+  return useQuery({
+    queryKey: ['property', propertyId],
+    queryFn: async () => {
+      try {
+        // Direct API call without authentication check
+        const response = await http.get<ApiResponse<Property>>(
           `/listing/${propertyId}`
         )
         return response.data

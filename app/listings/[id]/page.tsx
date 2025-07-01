@@ -31,7 +31,7 @@ import Header from '@/components/landing/header'
 import Footer from '@/components/landing/footer'
 import { useAuth } from '@/lib/store/auth.store'
 import {
-  useGetProperty,
+  useGetProperties,
   useSaveProperty,
   useRemoveFromFavorites,
 } from '@/lib/hooks/usePropertyApi'
@@ -66,7 +66,7 @@ function PropertyDetailPage() {
     data: propertyResponse,
     isLoading,
     error: queryError,
-  } = useGetProperty(propertyId)
+  } = useGetProperties(propertyId)
 
   const property = propertyResponse?.data
   const error = queryError ? (queryError as Error).message : null
@@ -155,17 +155,20 @@ function PropertyDetailPage() {
 
   const handleActionClick = (action: string, e: React.MouseEvent) => {
     e.preventDefault()
-    if (!user) {
-      router.push(`/login?redirect=/listing/${propertyId}&action=${action}`)
-      return
-    }
-
+     if (!user) {
+       router.push(`/login?redirect=/listings/${propertyId}&action=${action}`)
+       return
+     }
+    // No need to check for !user, since this is the authenticated page
     switch (action) {
       case 'contact':
         router.push(`/listings/${propertyId}/contact`)
         break
       case 'mortgage':
         router.push(`/listings/${propertyId}/mortgage`)
+        break
+      case 'callback':
+        router.push(`/listings/${propertyId}/callback`)
         break
       default:
         break
@@ -783,6 +786,7 @@ function PropertyDetailPage() {
                     <Button
                       variant="outline"
                       className="w-full bg-transparent text-[12px] border-[#546B2F] text-[#546B2F] hover:bg-gray-50"
+                      onClick={(e) => handleActionClick('callback', e)}
                     >
                       <Phone className="h-4 w-4 mr-2" />
                       Request Callback
