@@ -303,6 +303,75 @@ export const useGetAUTHProperty = (propertyId: string) => {
     enabled: !!propertyId,
   })
 }
+export function useGetSimilarProperties(property: any) {
+  // Fetch all properties
+  const { data: allPropertiesResponse, isLoading } = useGetPropertyListings()
+  const allProperties = allPropertiesResponse?.data || []
+
+  // Helper functions
+  const normalize = (str: string) =>
+    str
+      ?.toLowerCase()
+      .replace(/[^a-z0-9\s]/gi, '')
+      .trim() || ''
+
+  const getLocationParts = (location: string | undefined) => {
+    if (!location) return []
+    return location
+      .split(',')
+      .map((p) =>
+        p
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/gi, '')
+          .trim()
+      )
+      .filter(Boolean)
+  }
+
+  const locationsOverlap = (
+    locA: string | undefined,
+    locB: string | undefined
+  ) => {
+    const partsA = getLocationParts(locA)
+    const partsB = getLocationParts(locB)
+    return partsA.some((part) => partsB.includes(part))
+  }
+
+  // Compute similar properties
+  const similarProperties = property
+    ? allProperties
+        .filter((p) => {
+          if (p.id === property.id) return false
+
+          let matchCount = 0
+
+          if (locationsOverlap(p.location, property.location)) matchCount++
+          if (
+            p.developer?._id &&
+            property.developer?._id &&
+            p.developer._id === property.developer._id
+          )
+            matchCount++
+          if (
+            typeof p.bedrooms === 'number' &&
+            typeof property.bedrooms === 'number' &&
+            Math.abs(p.bedrooms - property.bedrooms) <= 1
+          )
+            matchCount++
+          if (
+            p.propertyType &&
+            property.propertyType &&
+            p.propertyType.toLowerCase() === property.propertyType.toLowerCase()
+          )
+            matchCount++
+
+          return matchCount >= 2
+        })
+        .slice(0, 4)
+    : []
+
+  return { similarProperties, isLoading }
+}
 
 // Toggle property favorite status
 export const useToggleFavorite = () => {

@@ -24,7 +24,7 @@ export default function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           viewport={{ once: true }}
-          className="text-2xl md:text-5xl font-bold text-center mb-12"
+          className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-semibold tracking-normal leading-10 sm:leading-normal text-center mb-12"
         >
           Flexible home financing made simple.
         </motion.h2>
@@ -73,11 +73,10 @@ export default function Footer() {
 
               {i === 1 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Browse</h3>
+                  <h3 className="text-lg font-medium">Quick Links</h3>
                   <ul className="space-y-2">
                     {[
-                      'All Properties',
-                      'New Properties',
+                      'Browse Listings',
                       'View Properties',
                       'Search By Location',
                       'Featured Homes',
@@ -149,7 +148,7 @@ export default function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
           viewport={{ once: true }}
-          className="mt-12 pt-6 border-t border-white/20 text-sm text-white/60 text-center"
+          className="mt-12 pt-6 border-t border-white/20 text-sm text-white text-left"
         >
           © 2025 Her Homes. All rights reserved.
         </motion.div>

@@ -49,7 +49,7 @@ export default function PropertyCard({
   const handleCardClick = () => {
     // Navigate to property details page
     if (!user) {
-      router.push(`/login?redirect=/listings/${id}&action=view-more`)
+      router.push(`/listings/${id}`)
       return
     }
 

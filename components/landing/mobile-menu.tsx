@@ -3,16 +3,26 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isPartnersOpen, setIsPartnersOpen] = useState(false)
+
   const navLinks = [
-    { text: 'Browse Listings', href: '/listings' },
-    { text: 'Apply for Financing', href: '/apply-for-financing' },
+    { text: 'Properties', href: '/listings' },
+    { text: 'About Us', href: '/apply-for-financing' },
     { text: 'Contact Us', href: '/contact-us' },
   ]
+
+  const partnerLinks = [
+    { text: 'Communities', href: '/partners/banks' },
+    { text: 'Mortgage Institutions', href: '/partners/developers' },
+    { text: 'Real Estate Agents', href: '/partners/agents' },
+    { text: 'Become a Partner', href: '/partners/join' },
+  ]
+
   const overlayVariants = {
     hidden: { opacity: 0, y: -20 },
     visible: {
@@ -40,13 +50,39 @@ export default function MobileMenu() {
     visible: { opacity: 1, y: 0 },
   }
 
+  const partnersVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: {
+      opacity: 1,
+      height: 'auto',
+      transition: {
+        duration: 0.3,
+        ease: 'easeOut',
+        staggerChildren: 0.05,
+      },
+    },
+    exit: {
+      opacity: 0,
+      height: 0,
+      transition: {
+        duration: 0.2,
+        ease: 'easeIn',
+      },
+    },
+  }
+
+  const partnerItemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 },
+  }
+
   return (
     <div className="md:hidden">
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="text-black w-16 h-16" // Increased width/height here
+        className="text-black w-16 h-16"
       >
         {isOpen ? (
           <X className="h-10 w-10 transition-transform duration-300 rotate-90" />
@@ -90,7 +126,54 @@ export default function MobileMenu() {
                 </motion.div>
               ))}
 
-              <motion.div variants={itemVariants} className="w-full">
+              {/* Partners Dropdown */}
+              <motion.div variants={itemVariants} className="w-full max-w-xs">
+                <button
+                  onClick={() => setIsPartnersOpen(!isPartnersOpen)}
+                  className="flex items-center justify-center gap-2 text-lg font-medium hover:text-[#e6a287] text-black/90 w-full py-2"
+                >
+                  Partners
+                  {isPartnersOpen ? (
+                    <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {isPartnersOpen && (
+                    <motion.div
+                      className="overflow-hidden"
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={partnersVariants}
+                    >
+                      <div className="flex flex-col items-center gap-3 pt-3 pb-2">
+                        {partnerLinks.map(({ text, href }, index) => (
+                          <motion.div
+                            key={index}
+                            variants={partnerItemVariants}
+                          >
+                            <Link
+                              href={href}
+                              className="text-base font-medium hover:text-[#e6a287] text-black/70 px-4 py-1"
+                              onClick={() => {
+                                setIsOpen(false)
+                                setIsPartnersOpen(false)
+                              }}
+                            >
+                              {text}
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="w-full max-w-xs">
                 <Link href="/signup" passHref legacyBehavior>
                   <Button className="bg-[#6e1a2c] hover:bg-[#5a1523] text-white rounded-md w-full mt-4">
                     Sign Up

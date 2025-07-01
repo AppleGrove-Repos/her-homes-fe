@@ -77,10 +77,11 @@ export default function RoleSelection({
               )}
             </div>
             <div>
-              <span className="font-medium">Home Seeker</span>
+              <span className="font-medium text-[15px]">Home Seeker</span>
               <span
                 className={cn(
                   'text-gray-500 ml-2',
+                  'text-[15px]',
                   selectedRole === 'applicant' ? 'text-white' : 'text-gray-500'
                 )}
               >
@@ -150,7 +151,7 @@ export default function RoleSelection({
       >
         Continue
       </motion.button>
-        <p className="mt-8 text-center text-sm text-gray-600">
+        {/* <p className="mt-8 text-center text-sm text-gray-600">
                      Have an account?{' '}
                     <Link
                       href="/login"
@@ -158,7 +159,7 @@ export default function RoleSelection({
                     >
                       Login
                     </Link>
-                  </p>
+                  </p> */}
     </motion.div>
   )
 }

@@ -242,11 +242,11 @@ function ListingsContent() {
     if (!isAuthenticated) {
       // Use the same path format as in PropertyCard for consistency
       router.push(
-        `/login?redirect=/user/listings/${propertyId}&action=view-more`
+        `/listings/${propertyId}`
       )
     } else {
       // Update this path to match as well
-      router.push(`/user/listings/${propertyId}`)
+      router.push(`/applicant/listing/${propertyId}`)
     }
   }
   const clearSearch = () => {
