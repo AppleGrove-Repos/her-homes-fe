@@ -176,7 +176,7 @@ export default function ConnectBuyersSection() {
   ]
 
   return (
-    <section ref={sectionRef} className="w-full py-16 lg:py-24 bg-gray-50">
+    <section ref={sectionRef} className="w-full py-16 lg:py-24 bg-[#546B2F]/5">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto">
           {/* Left side - Image */}

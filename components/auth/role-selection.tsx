@@ -43,7 +43,10 @@ export default function RoleSelection({
       }}
     >
       <div>
-        <motion.h2 className="text-lg font-medium mb-4" variants={roleVariants}>
+        <motion.h2
+          className="text-[15px] font-medium mb-4"
+          variants={roleVariants}
+        >
           Choose Your Role
         </motion.h2>
 
@@ -151,7 +154,16 @@ export default function RoleSelection({
       >
         Continue
       </motion.button>
-        {/* <p className="mt-8 text-center text-sm text-gray-600">
+      <div className="text-left text-gray-400/70 text-sm mt-2">
+        Already have an account?{' '}
+        <Link
+          href="/login"
+          className="text-[#546B2F] font-bold hover:underline"
+        >
+          Sign in
+        </Link>
+      </div>
+      {/* <p className="mt-8 text-center text-sm text-gray-600">
                      Have an account?{' '}
                     <Link
                       href="/login"

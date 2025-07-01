@@ -124,8 +124,8 @@ export default function Header() {
                   {[
                     { label: 'Communities', href: '/partners/banks' },
                     { label: 'Mortgage Institutions', href: '/partners/developers' },
-                    { label: 'Real Estate Agents', href: '/partners/agents' },
-                    { label: 'Become a Partner', href: '/partners/join' },
+                    { label: 'Real Estate Agents', href: '/signup' },
+                    { label: 'Become a Partner', href: '/partnership' },
                   ].map((item, index) => (
                     <motion.div key={index} variants={itemVariants}>
                       <Link

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Link from 'next/link'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -167,7 +168,7 @@ export default function PartnersSection() {
   return (
     <section
       ref={sectionRef}
-      className="w-full py-16 lg:py-24 bg-white relative md:mb-[-400px]"
+      className="w-full py-16 lg:py-24 bg-white relative "
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
@@ -239,23 +240,27 @@ export default function PartnersSection() {
           </motion.div>
 
           {/* CTA Button */}
+          {/* <Link href="/partnership" passHref> */}
           <motion.div
             ref={buttonRef}
-            className="text-center"
+            className="text-center px-4 sm:px-0"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-50px' }}
             variants={fadeInUp}
           >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="lg"
-                className="bg-[#8B2635] hover:bg-[#7A1F2B] text-white px-8 py-4 text-[15px] font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Become a Partner
-              </Button>
-            </motion.div>
+            <Link href="/partnership" passHref legacyBehavior>
+              <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  size="lg"
+                  className="bg-[#8B2635] hover:bg-[#7A1F2B] text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-[15px] font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
+                >
+                  Become a Partner
+                </Button>
+              </motion.a>
+            </Link>
           </motion.div>
+          {/* </Link> */}
         </div>
       </div>
     </section>

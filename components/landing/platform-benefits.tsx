@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 export default function PlatformBenefits() {
   return (
-    <section className="w-full py-16 md:py-24 relative">
+    <section className="w-full md:pb-12 pb-12 relative pt-[-500px]">
       {/* Pink blob decoration */}
       <div className="absolute top-0 right-0 w-1/4 h-1/2 bg-[#fdf0ed] rounded-bl-[30%] -z-10" />
 

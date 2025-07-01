@@ -1,7 +1,8 @@
 'use client'
 
 import type React from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -19,7 +20,11 @@ import {
   Car,
   Shield,
   Headphones,
+  MessageCircle,
+  Phone,
   Award,
+  Play,
+  Share,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Header from '@/components/landing/header'
@@ -49,6 +54,8 @@ function PropertyDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isGalleryAutoPlaying, setIsGalleryAutoPlaying] = useState(true)
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
   const { user } = useAuth()
 
@@ -68,9 +75,14 @@ function PropertyDetailPage() {
   const savePropertyMutation = useSaveProperty()
   const removeFromFavoritesMutation = useRemoveFromFavorites()
 
+  const propertyMedia = [
+    ...(property?.images || []),
+    ...(property?.videos || []),
+  ]
+
   // For demo purposes, using placeholder images if property has no images
-  const propertyImages = property?.images?.length
-    ? property.images
+  const galleryMedia = propertyMedia.length
+    ? propertyMedia
     : [
         '/placeholder.svg?height=600&width=800',
         '/placeholder.svg?height=600&width=800',
@@ -78,16 +90,38 @@ function PropertyDetailPage() {
         '/placeholder.svg?height=600&width=800',
         '/placeholder.svg?height=600&width=800',
       ]
+  const isCurrentMediaVideo = galleryMedia[currentImageIndex]?.endsWith('.mp4')
+
+  const visibleCount = 3 // Number of cards visible at once
+  // const maxIndex = Math.max(0, similarProperties.length - visibleCount)
+
+  const handleManualImageChange = (newIndex: number) => {
+    // Temporarily pause autoplay when user interacts
+    setIsGalleryAutoPlaying(false)
+    setCurrentImageIndex(newIndex)
+
+    // Check if the new media is a video
+    const isVideo = galleryMedia[newIndex]?.endsWith('.mp4')
+    setIsVideoPlaying(isVideo)
+
+    // Resume autoplay after 10 seconds of inactivity, but only if not on a video
+    if (!isVideo) {
+      const resumeTimeout = setTimeout(() => {
+        setIsGalleryAutoPlaying(true)
+      }, 10000)
+      return () => clearTimeout(resumeTimeout)
+    }
+  }
 
   const handlePrevImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? propertyImages.length - 1 : prev - 1
+    handleManualImageChange(
+      currentImageIndex === 0 ? galleryMedia.length - 1 : currentImageIndex - 1
     )
   }
 
   const handleNextImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev === propertyImages.length - 1 ? 0 : prev + 1
+    handleManualImageChange(
+      currentImageIndex === galleryMedia.length - 1 ? 0 : currentImageIndex + 1
     )
   }
 
@@ -155,10 +189,49 @@ function PropertyDetailPage() {
       navigator.clipboard.writeText(window.location.href)
     }
   }
+  useEffect(() => {
+    let slideInterval: NodeJS.Timeout | undefined
 
+    // Only auto-play if enabled and current media is not a video
+    if (
+      isGalleryAutoPlaying &&
+      !isCurrentMediaVideo &&
+      galleryMedia.length > 1
+    ) {
+      slideInterval = setInterval(() => {
+        // Find next non-video index if possible
+        let nextIndex = currentImageIndex
+        let loopCount = 0
+        const maxLoops = galleryMedia.length // Prevent infinite loop
+
+        do {
+          nextIndex = (nextIndex + 1) % galleryMedia.length
+          loopCount++
+          // If we've checked all items and they're all videos, just move to next
+          if (loopCount >= maxLoops) {
+            break
+          }
+        } while (
+          galleryMedia[nextIndex]?.endsWith('.mp4') &&
+          loopCount < maxLoops
+        )
+
+        setCurrentImageIndex(nextIndex)
+      }, 5000)
+    }
+
+    return () => {
+      if (slideInterval) clearInterval(slideInterval)
+    }
+  }, [
+    isGalleryAutoPlaying,
+    galleryMedia.length,
+    currentImageIndex,
+    isCurrentMediaVideo,
+  ])
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50 overflow-hidden">
+      <div className="flex min-h-screen flex-col bg-white overflow-hidden">
         <Header />
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
           <div className="flex flex-col items-center">
@@ -173,7 +246,7 @@ function PropertyDetailPage() {
 
   if (error || !property) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50 overflow-hidden">
+      <div className="flex min-h-screen flex-col bg-white overflow-hidden">
         <Header />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
           <h2 className="text-2xl font-bold text-red-600 mb-4">
@@ -204,375 +277,730 @@ function PropertyDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-white overflow-hidden">
       <Header />
 
-      <main className="flex-grow">
+      <main className="flex-grow bg-[#F5F5F0]">
         {/* Back button */}
-        <div className="container mx-auto px-4 py-4">
-          {/* <div className="bg-white px-6 py-4">   */}
+        <div className="b px-6 py-4 flex items-center justify-between mx-12">
           <div className="flex items-center mb-4">
-            <Button variant="ghost" className="p-0 mr-2 hover:bg-transparent" onClick={handleGoBack}>
-              <ArrowLeft className="h-5 w-5 text-[#546B2F]" />
+            <Button
+              variant="ghost"
+              className="p-0 mr-2 hover:bg-transparent"
+              onClick={handleGoBack}
+            >
+              <ArrowLeft className="h-5 w-5 text-[#64111F]" />
             </Button>
-            <div className="text-sm text-gray-500">
-              <span className="hover:underline cursor-pointer" onClick={() => router.push("/listings")}>
+            <div className="text-sm text-[#64111F]">
+              <span
+                className="hover:underline cursor-pointer"
+                onClick={() => router.push('/listings')}
+              >
                 Listings
               </span>
               <span className="mx-2">/</span>
-              <span className="text-[#546B2F]">{property.name}</span>
+              <span className="text-[#64111F]">{property.name}</span>
             </div>
           </div>
+          <Button
+            variant="outline"
+            className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent max-w-[100px]"
+            onClick={handleShare}
+            type="button"
+          >
+            <Share className="h-4 w-4 mr-2" />
+            Share
+          </Button>
         </div>
 
-        {/* Main content grid */}
-        <div className="container mx-auto px-4 pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left column - Images */}
-            <div className="lg:col-span-2">
-              {/* Main image */}
-              <div className="relative mb-4 bg-white rounded-2xl overflow-hidden shadow-sm">
-                <div className="relative h-[400px] md:h-[500px] w-full">
-                  <Image
-                    src={
-                      propertyImages[currentImageIndex] ||
-                      '/placeholder.svg?height=600&width=800' ||
-                      '/placeholder.svg'
-                    }
-                    alt={property.name}
-                    fill
-                    className="object-cover"
-                  />
-
-                  {/* Image navigation buttons */}
-                  <button
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-md"
-                    onClick={handlePrevImage}
-                  >
-                    <ChevronLeft className="h-5 w-5 text-gray-800" />
-                  </button>
-                  <button
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-md"
-                    onClick={handleNextImage}
-                  >
-                    <ChevronRight className="h-5 w-5 text-gray-800" />
-                  </button>
-                </div>
-
-                {/* Thumbnail gallery */}
-                <div className="flex overflow-x-auto p-4 gap-3 bg-white">
-                  {propertyImages.map((image, index) => (
-                    <div
-                      key={index}
-                      className={`relative h-16 w-20 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 ${
-                        index === currentImageIndex
-                          ? 'border-[#546B2F]'
-                          : 'border-gray-200'
-                      }`}
-                      onClick={() => setCurrentImageIndex(index)}
+        {/* Main content container */}
+        <div className="px-6 pb-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Top section: Image + Property Details */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              {/* Left: Main Image with thumbnails overlaid at bottom */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-2xl overflow-hidden">
+                  {/* Main image with overlaid thumbnails */}
+                  <div className="relative h-[400px] md:h-[500px] w-full">
+                    <AnimatePresence initial={false} custom={currentImageIndex}>
+                      <motion.div
+                        key={currentImageIndex}
+                        custom={currentImageIndex}
+                        initial={{ opacity: 0, x: 300 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -300 }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 30,
+                          duration: 0.5,
+                        }}
+                        className="absolute inset-0"
+                      >
+                        {galleryMedia[currentImageIndex]?.endsWith('.mp4') ? (
+                          <video
+                            src={galleryMedia[currentImageIndex]}
+                            controls
+                            autoPlay
+                            className="object-cover w-full h-full"
+                            style={{
+                              height: '100%',
+                              width: '100%',
+                              borderRadius: 'inherit',
+                            }}
+                            onPlay={() => {
+                              setIsVideoPlaying(true)
+                              setIsGalleryAutoPlaying(false)
+                            }}
+                            onPause={() => setIsVideoPlaying(false)}
+                            onEnded={() => {
+                              setIsVideoPlaying(false)
+                              // Move to next item after video ends
+                              handleNextImage()
+                              // Resume auto-slideshow
+                              setIsGalleryAutoPlaying(true)
+                            }}
+                          />
+                        ) : (
+                          <Image
+                            src={
+                              galleryMedia[currentImageIndex] ||
+                              '/placeholder.svg?height=600&width=800'
+                            }
+                            alt={property.name}
+                            fill
+                            className="object-cover"
+                          />
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+                    {/* Image navigation buttons */}
+                    <button
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-md"
+                      onClick={handlePrevImage}
                     >
-                      <Image
-                        src={image || '/placeholder.svg?height=120&width=160'}
-                        alt={`Thumbnail ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
+                      <ChevronLeft className="h-5 w-5 text-gray-800" />
+                    </button>
+                    <button
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-md"
+                      onClick={handleNextImage}
+                    >
+                      <ChevronRight className="h-5 w-5 text-gray-800" />
+                    </button>
+
+                    {/* Thumbnail gallery overlaid at bottom */}
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="flex gap-2 overflow-x-auto">
+                        {galleryMedia.map((media, index) => {
+                          const isVideo = media.endsWith('.mp4')
+                          return (
+                            <motion.div
+                              key={index}
+                              whileHover={{ scale: 1.05 }}
+                              className={`relative h-16 w-20 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 ${
+                                index === currentImageIndex
+                                  ? 'border-white'
+                                  : 'border-white/50'
+                              } shadow-lg`}
+                              onClick={() => handleManualImageChange(index)}
+                            >
+                              {isVideo ? (
+                                <>
+                                  <div className="absolute inset-0 bg-black/20 z-10 flex items-center justify-center">
+                                    <div className="bg-white/80 rounded-full p-1">
+                                      <Play className="h-4 w-4 text-[#546B2F] fill-[#546B2F]" />
+                                    </div>
+                                  </div>
+                                  <video
+                                    src={media}
+                                    className="object-cover h-full w-full"
+                                  />
+                                </>
+                              ) : (
+                                <Image
+                                  src={
+                                    media ||
+                                    '/placeholder.svg?height=120&width=160'
+                                  }
+                                  alt={`Thumbnail ${index + 1}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                              )}
+                            </motion.div>
+                          )
+                        })}
+                        {/* {galleryMedia.slice(0, 5).map((image, index) => (
+                          <div
+                            key={index}
+                            className={`relative h-16 w-20 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 ${
+                              index === currentImageIndex
+                                ? 'border-white'
+                                : 'border-white/50'
+                            } shadow-lg`}
+                            onClick={() => setCurrentImageIndex(index)}
+                          >
+                            <Image
+                              src={
+                                image || '/placeholder.svg?height=120&width=160'
+                              }
+                              alt={`Thumbnail ${index + 1}`}
+                              fill
+                              className="object-cover w-full h-full"
+                              sizes="80px"
+                            />
+                          </div>
+                        ))} */}
+                      </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right column - Property details */}
-            <div className="space-y-6">
-              {/* Property title and basic info */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                  {property.name}
+              {/* Right: Property Details Card */}
+              <div className="bg-white p-8 rounded-2xl h-[500px]">
+                <h1 className="text-2xl font-medium text-gray-900 mb-2">
+                  3-Bedroom Bungalow in Lekki
                 </h1>
                 <div className="flex items-center text-gray-600 mb-4">
-                  <MapPin className="h-4 w-4 mr-1 text-[#546B2F]" />
-                  <span>{property.location}</span>
+                  <MapPin
+                    className="h-4 w-4 text-[#546B2F] mr-2"
+                    strokeWidth={4}
+                  />
+                  <span className="text-sm">Lekki Phase 1, Lagos, Nigeria</span>
                 </div>
 
-                <div className="text-3xl font-bold text-gray-900 mb-4">
-                  {formatCurrency(property.price)}
+                <div className="text-3xl font-medium text-[#546B2F] mb-6">
+                  ₦35,000,000
                 </div>
 
-                <div className="flex gap-3 mb-6">
+                <div className="flex flex-col gap-3 mb-6 sm:flex-row">
                   <Button
                     className="flex-1 bg-[#7C0A02] hover:bg-[#600000] text-white"
                     onClick={(e) => handleActionClick('mortgage', e)}
                   >
-                    <Home className="h-4 w-4 mr-2" />
+                    <Home className="h-4 w-4 mr-2" strokeWidth={4} />
                     Apply for Mortgage
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="border-[#546B2F] text-[#546B2F] hover:bg-[#546B2F] hover:text-white bg-transparent"
-                    onClick={(e) => toggleFavorite(e)}
-                  >
-                    <Heart
-                      className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`}
-                    />
-                    Save Property
-                  </Button>
+                  <div className="flex flex-1 gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-gray-300 w-7 text-[#546B2F] text-[11px] hover:bg-gray-50 bg-transparent"
+                      onClick={(e) => toggleFavorite(e)}
+                    >
+                      <Heart
+                        className={`h-2 w-2 mr-2 ${
+                          isFavorite ? 'fill-current text-red-500' : ''
+                        }`}
+                        strokeWidth={3}
+                      />
+                      Save Property
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Property specs */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-rows-2 gap-4 text-sm">
                   <div className="flex items-center">
-                    <Bed className="h-5 w-5 text-[#546B2F] mr-2" />
-                    <span className="text-sm">
-                      {property.bedrooms} Bedrooms
-                    </span>
+                    <Bed
+                      className="h-4 w-4 text-[#546B2F] mr-2"
+                      strokeWidth={3}
+                    />
+                    <span>3 Bedrooms</span>
                   </div>
                   <div className="flex items-center">
-                    <Bath className="h-5 w-5 text-[#546B2F] mr-2" />
-                    <span className="text-sm">3 Bathrooms</span>
+                    <Home
+                      className="h-4 w-4 text-[#546B2F] mr-2"
+                      strokeWidth={3}
+                    />
+                    <span>180 sqm</span>
                   </div>
                   <div className="flex items-center">
-                    <Home className="h-5 w-5 text-[#546B2F] mr-2" />
-                    <span className="text-sm">180 sqm</span>
+                    <Bath
+                      className="h-4 w-4 text-[#546B2F] mr-2"
+                      strokeWidth={3}
+                    />
+                    <span>3 Bathrooms</span>
                   </div>
                   <div className="flex items-center">
-                    <Car className="h-5 w-5 text-[#546B2F] mr-2" />
-                    <span className="text-sm">2 Parking</span>
+                    <Car
+                      className="h-4 w-4 text-[#546B2F] mr-2"
+                      strokeWidth={3}
+                    />
+                    <span>2 Parking</span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Contact Agent */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm">
-                <h3 className="font-semibold mb-4">Contact Agent</h3>
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full mr-3"></div>
-                  <div>
-                    <p className="font-medium">Sarah Johnson</p>
-                    <p className="text-sm text-gray-600">
-                      Verified Her Homes Partner
-                    </p>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      <span className="text-sm ml-1">4.9 (127 reviews)</span>
+            {/* Main content area with sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left: Main content sections */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* Property Overview */}
+                <div className="bg-white p-6 rounded-2xl">
+                  <h2 className="text-xl font-semibold mb-6">
+                    Property Overview
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Home className="h-6 w-6 text-gray-600" />
+                      </div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        Property Type
+                      </p>
+                      <p className="font-medium">Bungalow</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Calendar className="h-6 w-6 text-gray-600" />
+                      </div>
+                      <p className="text-sm text-gray-500 mb-1">Year Built</p>
+                      <p className="font-medium">2023</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Check className="h-6 w-6 text-gray-600" />
+                      </div>
+                      <p className="text-sm text-gray-500 mb-1">Finishing</p>
+                      <p className="font-medium">Fully Finished</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Star className="h-6 w-6 text-gray-600" />
+                      </div>
+                      <p className="text-sm text-gray-500 mb-1">Status</p>
+                      <p className="font-medium">New</p>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Button className="w-full bg-[#7C0A02] hover:bg-[#600000]">
-                    Send Message
-                  </Button>
-                  <Button variant="outline" className="w-full bg-transparent">
-                    Request Callback
-                  </Button>
+
+                {/* Mortgage & Pricing */}
+                <div className="bg-white p-6 rounded-2xl">
+                  <h2 className="text-xl font-semibold mb-6">
+                    Mortgage & Pricing
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Price</span>
+                        <span className="font-semibold">₦35,000,000</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          Down Payment (30%)
+                        </span>
+                        <span className="font-semibold">₦7,000,000</span>
+                      </div>
+                      <div className="text-[#546B2F] text-sm font-medium">
+                        Pre-qualified Available
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Monthly Payment</span>
+                        <select className="border border-gray-300 rounded px-3 py-1 text-sm">
+                          <option>10 years</option>
+                          <option>15 years</option>
+                          <option>20 years</option>
+                        </select>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        ₦280,000/month
+                      </div>
+                      <Button className="w-full bg-[#7C0A02] hover:bg-[#600000]">
+                        Check Your Eligibility
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Property Description */}
+                <div className="bg-white p-6 rounded-2xl">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Property Description
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-6">
+                    This stunning 3-bedroom bungalow is located in the
+                    prestigious Lekki Phase 1, offering modern living in one of
+                    Lagos' most sought-after neighborhoods.
+                  </p>
+
+                  <h3 className="font-semibold mb-4">Key Features</h3>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="flex items-center">
+                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
+                      <span className="text-sm">POP ceiling throughout</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
+                      <span className="text-sm">
+                        Marble flooring in living areas
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
+                      <span className="text-sm">CCTV-ready infrastructure</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
+                      <span className="text-sm">
+                        Modern kitchen with granite countertops
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
+                      <span className="text-sm">En-suite bathrooms</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Neighborhood */}
+                <div className="bg-white p-6 rounded-2xl">
+                  <h2 className="text-xl font-semibold mb-4">Neighborhood</h2>
+                  <p className="text-gray-700 leading-relaxed">
+                    Lekki Phase 1 is known for its excellent infrastructure,
+                    proximity to Victoria Island, and access to top-tier
+                    amenities including international schools, hospitals, and
+                    shopping centers.
+                  </p>
+                </div>
+
+                {/* Location & Map */}
+                <div className="bg-white p-6 rounded-2xl">
+                  <h2 className="text-xl font-semibold mb-6">Location & Map</h2>
+                  <div className="h-[300px] bg-gray-100 rounded-lg flex items-center justify-center mb-6">
+                    <div className="text-center">
+                      <MapPin className="h-12 w-12 text-[#546B2F] mx-auto mb-2" />
+                      <p className="text-gray-600 font-medium">
+                        Interactive Map
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Lekki Phase 1, Lagos
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-3"></div>
+                        <span className="text-sm">
+                          Corona Schools - 5 min drive
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-3"></div>
+                        <span className="text-sm">
+                          Palms Shopping Mall - 10 min drive
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-3"></div>
+                        <span className="text-sm">
+                          Reddington Hospital - 8 min drive
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-3"></div>
+                        <span className="text-sm">
+                          Lekki-Epe Expressway - 2 min drive
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Similar Properties */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm">
-                <h3 className="font-semibold mb-4">Similar Properties</h3>
-                <div className="space-y-4">
-                  {[1, 2].map((item) => (
-                    <div key={item} className="flex gap-3">
-                      <div className="relative h-16 w-20 flex-shrink-0 rounded-lg overflow-hidden">
+              {/* Right: Sidebar */}
+              <div className="space-y-6">
+                {/* Contact Agent */}
+                <div className="bg-white p-6 rounded-2xl">
+                  <h3 className="font-semibold mb-4">Contact Agent</h3>
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 overflow-hidden">
+                      {property.developer?.companyLogo ? (
                         <Image
-                          src="/placeholder.svg?height=120&width=160"
-                          alt="Similar property"
-                          fill
-                          className="object-cover"
+                          src={property.developer.companyLogo}
+                          alt={
+                            property.developer.companyName || 'Developer Logo'
+                          }
+                          width={48}
+                          height={48}
+                          className="object-cover rounded-full mr-3"
                         />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 overflow-hidden flex items-center justify-center">
+                          <Image
+                            src="/placeholder.svg?height=48&width=48"
+                            alt="No Logo"
+                            width={48}
+                            height={48}
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">
+                        {' '}
+                        {property.developer?.companyName || 'Unknown Company'}
+                      </p>
+                      <p className="text-sm text-gray-600 flex items-center">
+                        Verified Her Homes Partner
+                        <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#546B2F]">
+                          <Check
+                            className="h-3 w-3 text-white"
+                            strokeWidth={3}
+                          />
+                        </span>
+                      </p>
+                      <div className="flex items-center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className="h-3 w-3 text-yellow-400 fill-yellow-400"
+                          />
+                        ))}
+                        <span className="text-xs text-gray-500 ml-1">
+                          4.9 (127 reviews)
+                        </span>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm">
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Button
+                      className="w-full bg-[#7C0A02] text-[12px] hover:bg-[#600000]"
+                      onClick={(e) => handleActionClick('contact', e)}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Send Message
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full bg-transparent text-[12px] border-[#546B2F] text-[#546B2F] hover:bg-gray-50"
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Request Callback
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Share Button */}
+                {/* <div className="bg-white p-6 rounded-2xl flex items-center justify-center">
+                  <Button
+                    className="w-full bg-[#546B2F] hover:bg-[#3d4e22] text-white"
+                    onClick={handleShare}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 8a3 3 0 11-6 0 3 3 0 016 0zm6 8a3 3 0 11-6 0 3 3 0 016 0zm-6 4v-4m0 0V8m0 4H9m6 0h-6"
+                      />
+                    </svg>
+                    Share
+                  </Button>
+                </div> */}
+
+                {/* Similar Properties */}
+                <div className="bg-white p-6 rounded-2xl">
+                  <h3 className="font-semibold mb-4">Similar Properties</h3>
+                  <div className="space-y-4">
+                    <div
+                      className="block cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-2 -m-2"
+                      onClick={() => router.push('/listing/property-2')}
+                    >
+                      <div className="relative h-32 w-full rounded-lg overflow-hidden mb-3">
+                        <Image
+                          src="/placeholder.svg?height=200&width=300"
+                          alt="2-Bedroom Apartment"
+                          fill
+                          className="object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                        {/* Heart icon for favorites */}
+                        <button
+                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Handle favorite toggle for this property
+                            console.log('Toggle favorite for property-2')
+                          }}
+                        >
+                          <Heart className="h-3 w-3 text-gray-600 hover:text-red-500" />
+                        </button>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm hover:text-[#546B2F] transition-colors">
                           2-Bedroom Apartment
                         </h4>
-                        <p className="text-xs text-gray-500">Lekki Phase 2</p>
-                        <p className="text-sm font-semibold">₦28,000,000</p>
+                        <div className="flex items-center text-xs text-gray-500 mb-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span>Lekki Phase 2</span>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          ₦28,000,000
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                          <div className="flex items-center">
+                            <Bed className="h-3 w-3 mr-1" />
+                            <span>2</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Bath className="h-3 w-3 mr-1" />
+                            <span>2</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Home className="h-3 w-3 mr-1" />
+                            <span>120 sqm</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Property Overview Section */}
-          <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm">
-            <h2 className="text-xl font-bold mb-6">Property Overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-[#546B2F]/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Home className="h-6 w-6 text-[#546B2F]" />
-                </div>
-                <p className="text-sm text-gray-600">Property Type</p>
-                <p className="font-semibold">{property.propertyType}</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-[#546B2F]/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Calendar className="h-6 w-6 text-[#546B2F]" />
-                </div>
-                <p className="text-sm text-gray-600">Year Built</p>
-                <p className="font-semibold">2023</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-[#546B2F]/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Check className="h-6 w-6 text-[#546B2F]" />
-                </div>
-                <p className="text-sm text-gray-600">Finishing</p>
-                <p className="font-semibold">Fully Finished</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-[#546B2F]/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Star className="h-6 w-6 text-[#546B2F]" />
-                </div>
-                <p className="text-sm text-gray-600">Status</p>
-                <p className="font-semibold">New</p>
-              </div>
-            </div>
-          </div>
+                    <div
+                      className="block cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-2 -m-2"
+                      onClick={() => router.push('/listing/property-3')}
+                    >
+                      <div className="relative h-32 w-full rounded-lg overflow-hidden mb-3">
+                        <Image
+                          src="/placeholder.svg?height=200&width=300"
+                          alt="4-Bedroom Duplex"
+                          fill
+                          className="object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                        {/* Heart icon for favorites */}
+                        <button
+                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Handle favorite toggle for this property
+                            console.log('Toggle favorite for property-3')
+                          }}
+                        >
+                          <Heart className="h-3 w-3 text-gray-600 hover:text-red-500" />
+                        </button>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm hover:text-[#546B2F] transition-colors">
+                          4-Bedroom Duplex
+                        </h4>
+                        <div className="flex items-center text-xs text-gray-500 mb-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span>Ajah, Lagos</span>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          ₦42,000,000
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                          <div className="flex items-center">
+                            <Bed className="h-3 w-3 mr-1" />
+                            <span>4</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Bath className="h-3 w-3 mr-1" />
+                            <span>4</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Home className="h-3 w-3 mr-1" />
+                            <span>250 sqm</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-          {/* Mortgage & Pricing Section */}
-          <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm">
-            <h2 className="text-xl font-bold mb-6">Mortgage & Pricing</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
+                    <div
+                      className="block cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-2 -m-2"
+                      onClick={() => router.push('/listing/property-4')}
+                    >
+                      <div className="relative h-32 w-full rounded-lg overflow-hidden mb-3">
+                        <Image
+                          src="/placeholder.svg?height=200&width=300"
+                          alt="3-Bedroom Terrace"
+                          fill
+                          className="object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                        {/* Heart icon for favorites */}
+                        <button
+                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Handle favorite toggle for this property
+                            console.log('Toggle favorite for property-4')
+                          }}
+                        >
+                          <Heart className="h-3 w-3 text-gray-600 hover:text-red-500" />
+                        </button>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm hover:text-[#546B2F] transition-colors">
+                          3-Bedroom Terrace
+                        </h4>
+                        <div className="flex items-center text-xs text-gray-500 mb-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span>Ikoyi, Lagos</span>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          ₦38,500,000
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                          <div className="flex items-center">
+                            <Bed className="h-3 w-3 mr-1" />
+                            <span>3</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Bath className="h-3 w-3 mr-1" />
+                            <span>3</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Home className="h-3 w-3 mr-1" />
+                            <span>200 sqm</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Service Cards */}
                 <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Price</span>
-                    <span className="font-semibold">
-                      {formatCurrency(property.price)}
-                    </span>
+                  <div className="bg-gray-800 text-white p-6 rounded-2xl">
+                    <Shield className="h-8 w-8 mb-4" />
+                    <h3 className="font-semibold mb-2">Verified Properties</h3>
+                    <p className="text-sm text-gray-300">
+                      We list only thoroughly vetted homes — verified documents,
+                      trusted developers, and safe locations.
+                    </p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Down Payment (30%)</span>
-                    <span className="font-semibold">
-                      {formatCurrency(downPaymentAmount)}
-                    </span>
+                  <div className="bg-[#546B2F] text-white p-6 rounded-2xl">
+                    <Headphones className="h-8 w-8 mb-4" />
+                    <h3 className="font-semibold mb-2">Reliable Support</h3>
+                    <p className="text-sm text-green-100">
+                      Need help? Our team is here to guide you through every
+                      step — from search to signing.
+                    </p>
                   </div>
-                  <div className="text-[#546B2F] text-sm">
-                    Pre-qualified Available
+                  <div className="bg-[#7C0A02] text-white p-6 rounded-2xl">
+                    <Award className="h-8 w-8 mb-4" />
+                    <h3 className="font-semibold mb-2">Trusted Partners</h3>
+                    <p className="text-sm text-red-100">
+                      We work with top banks and developers to give you secure
+                      financing and quality homes.
+                    </p>
                   </div>
                 </div>
               </div>
-              <div>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Monthly Payment</span>
-                    <select className="border rounded px-2 py-1 text-sm">
-                      <option>10 years</option>
-                      <option>15 years</option>
-                      <option>20 years</option>
-                    </select>
-                  </div>
-                  <div className="text-2xl font-bold text-[#546B2F]">
-                    {formatCurrency(property.minMonthlyPayment)}/month
-                  </div>
-                  <Button className="w-full bg-[#7C0A02] hover:bg-[#600000]">
-                    Check Your Eligibility
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Property Description */}
-          <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm">
-            <h2 className="text-xl font-bold mb-4">Property Description</h2>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              {property.description}
-            </p>
-
-            <h3 className="font-semibold mb-4">Key Features</h3>
-            <div className="grid md:grid-cols-2 gap-3">
-              <div className="flex items-center">
-                <Check className="h-5 w-5 text-[#546B2F] mr-2" />
-                <span>POP ceiling throughout</span>
-              </div>
-              <div className="flex items-center">
-                <Check className="h-5 w-5 text-[#546B2F] mr-2" />
-                <span>Marble flooring in living areas</span>
-              </div>
-              <div className="flex items-center">
-                <Check className="h-5 w-5 text-[#546B2F] mr-2" />
-                <span>CCTV-ready infrastructure</span>
-              </div>
-              <div className="flex items-center">
-                <Check className="h-5 w-5 text-[#546B2F] mr-2" />
-                <span>Modern kitchen with granite countertops</span>
-              </div>
-              <div className="flex items-center">
-                <Check className="h-5 w-5 text-[#546B2F] mr-2" />
-                <span>En-suite bathrooms</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Location & Map */}
-          <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm">
-            <h2 className="text-xl font-bold mb-6">Location & Map</h2>
-            <div className="h-[300px] bg-gray-100 rounded-lg flex items-center justify-center mb-6">
-              <div className="text-center">
-                <MapPin className="h-12 w-12 text-[#546B2F] mx-auto mb-2" />
-                <p className="text-gray-600">Interactive Map</p>
-                <p className="text-sm text-gray-500">Lekki Phase 1, Lagos</p>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-2"></div>
-                  <span className="text-sm">Corona Schools - 5 min drive</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-2"></div>
-                  <span className="text-sm">
-                    Palms Shopping Mall - 10 min drive
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-2"></div>
-                  <span className="text-sm">
-                    Reddington Hospital - 8 min drive
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-[#546B2F] rounded-full mr-2"></div>
-                  <span className="text-sm">
-                    Lekki-Epe Expressway - 2 min drive
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Service Cards */}
-          <div className="mt-8 grid md:grid-cols-3 gap-6">
-            <div className="bg-gray-800 text-white p-6 rounded-2xl">
-              <Shield className="h-8 w-8 mb-4" />
-              <h3 className="font-semibold mb-2">Verified Properties</h3>
-              <p className="text-sm text-gray-300">
-                We list only thoroughly vetted homes — verified documents,
-                trusted developers, and safe locations.
-              </p>
-            </div>
-            <div className="bg-[#546B2F] text-white p-6 rounded-2xl">
-              <Headphones className="h-8 w-8 mb-4" />
-              <h3 className="font-semibold mb-2">Reliable Support</h3>
-              <p className="text-sm text-green-100">
-                Need help? Our team is here to guide you through every step —
-                from search to signing.
-              </p>
-            </div>
-            <div className="bg-[#7C0A02] text-white p-6 rounded-2xl">
-              <Award className="h-8 w-8 mb-4" />
-              <h3 className="font-semibold mb-2">Trusted Partners</h3>
-              <p className="text-sm text-red-100">
-                We work with top banks and developers to give you secure
-                financing and quality homes.
-              </p>
             </div>
           </div>
         </div>
