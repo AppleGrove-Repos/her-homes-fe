@@ -3,6 +3,7 @@
 import type React from 'react'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import CustomShareButton from '@/components/common/button/CustomShareButton'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -280,7 +281,7 @@ function PropertyDetailPage() {
 
       <main className="flex-grow bg-[#F5F5F0]">
         {/* Back button */}
-        <div className="b px-6 py-4 flex items-center justify-between mx-12">
+        <div className=" px-6 py-4 flex items-center justify-between mx-0 md:mx-24">
           <div className="flex items-center mb-4">
             <Button
               variant="ghost"
@@ -289,7 +290,7 @@ function PropertyDetailPage() {
             >
               <ArrowLeft className="h-5 w-5 text-[#64111F]" />
             </Button>
-            <div className="text-sm text-[#64111F]">
+            <div className="text-[12px] text-[#64111F]">
               <span
                 className="hover:underline cursor-pointer"
                 onClick={() => router.push('/listings')}
@@ -300,7 +301,7 @@ function PropertyDetailPage() {
               <span className="text-[#64111F]">{property.name}</span>
             </div>
           </div>
-          <Button
+          {/* <Button
             variant="outline"
             className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent max-w-[100px]"
             onClick={handleShare}
@@ -308,9 +309,9 @@ function PropertyDetailPage() {
           >
             <Share className="h-4 w-4 mr-2" />
             Share
-          </Button>
+          </Button> */}
+          <CustomShareButton onClick={handleShare} />
         </div>
-
         {/* Main content container */}
         <div className="px-6 pb-8">
           <div className="max-w-7xl mx-auto">

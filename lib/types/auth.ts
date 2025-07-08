@@ -12,6 +12,15 @@ export interface DeveloperSignupData {
 }
 export type UserRole = 'applicant' | 'developer' | 'admin'
 
+export interface ContactUsDto {
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  reason: string
+  message: string
+}
+
 export interface ApplicantSignupData {
   email: string
   phoneNumber: string

@@ -24,16 +24,26 @@ export interface Property {
 }
 
 export interface CreatePropertyDto {
-  name: string
-  description: string
-  bedrooms: string
+  title: string
+  propertyDescription: string
+  neighborhoodDescription: string
+  propertyAddress: string
+  nearbyLandmark: string
   images: string[]
   videos: string[]
-  location: string
-  price: string
+  price: number
   propertyType: string
-  minDownPaymentPercent: string
-  minMonthlyPayment: string
+  minDownPaymentPercent: number
+  minMonthlyPayment: number
+  specifications: {
+    bedrooms: number
+    area: number
+    floor: number
+  }
+  features: {
+    gym: boolean
+    pool: boolean
+  }
 }
 
 export interface SearchProperties {
@@ -88,7 +98,7 @@ export const getPropertyById = async (propertyId: string) => {
 export const createProperty = async (data: CreatePropertyDto) => {
   try {
     console.log('Sending payload:', data)
-    const response = await https.post('/listing', data)
+    const response = await https.post('/properties', data)
 
     toast.success('Property created successfully')
     return response.data.data

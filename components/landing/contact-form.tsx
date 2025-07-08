@@ -6,7 +6,10 @@ import { useState } from 'react'
 import Button  from '@/components/common/button/index'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
+import { useMutation } from '@tanstack/react-query'
+import { contactUS } from '@/lib/services/auth.service'
+// import { ContactUsDto } from '@/lib/types'
 
 import {
   Select,
@@ -16,6 +19,23 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+interface ContactUsDto {
+  firstName: string
+  lastName: string
+  email: string
+  phoneNumber: string 
+  inquiryReason: string
+  message: string
+}
+
+interface ContactFormData {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  reason: string
+  message: string
+}
 export default function ContactForm() {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -25,38 +45,96 @@ export default function ContactForm() {
     reason: '',
     message: '',
   })
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSelectChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, reason: value }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Form submitted:', formData)
-
-    // Example submission logic (e.g., send data to API)
-    // await sendToBackend(formData)
-
-    // Clear form
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      reason: '',
-      message: '',
+   const contactMutation = useMutation({
+     mutationFn: contactUS,
+     onSuccess: (data) => {
+       console.log('Contact form submitted successfully:', data)
+       // Clear form on success
+       setFormData({
+         firstName: '',
+         lastName: '',
+         email: '',
+         phone: '',
+         reason: '',
+         message: '',
+       })
+       // Success toast is already handled in the API function
+     },
+     onError: (error: Error) => {
+       console.error('Contact form submission failed:', error)
+       // Error toast is already handled in the API function
+     },
    })
 
-    // Show toast
-    toast.success('Form submitted successfully!')
-  }
+ const handleChange = (
+   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+ ) => {
+   const { name, value } = e.target
+   setFormData((prev) => ({ ...prev, [name]: value }))
+ }
+
+ const handleSelectChange = (value: string) => {
+   setFormData((prev) => ({ ...prev, reason: value }))
+ }
+
+ const validateForm = (): boolean => {
+   const requiredFields = [
+     'firstName',
+     'lastName',
+     'email',
+     'reason',
+     'message',
+   ]
+
+   for (const field of requiredFields) {
+     if (!formData[field as keyof ContactFormData]?.trim()) {
+       toast.error(
+         `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+       )
+       return false
+     }
+   }
+
+   // Email validation
+   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+   if (!emailRegex.test(formData.email)) {
+     toast.error('Please enter a valid email address')
+     return false
+   }
+
+   // Phone validation (if provided)
+   if (formData.phone && formData.phone.trim()) {
+     const phoneRegex = /^[+]?[1-9][\d]{0,15}$/
+     if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+       toast.error('Please enter a valid phone number')
+       return false
+     }
+   }
+
+   return true
+ }
+
+ const handleSubmit = async (e: React.FormEvent) => {
+   e.preventDefault()
+
+   // Validate form
+   if (!validateForm()) {
+     return
+   }
+
+   // Prepare data for API
+   const submitData: ContactUsDto = {
+     firstName: formData.firstName.trim(),
+     lastName: formData.lastName.trim(),
+     email: formData.email.trim(),
+     phoneNumber: formData.phone.trim(),
+     inquiryReason: formData.reason,
+     message: formData.message.trim(),
+   }
+
+   // Submit using mutation
+   contactMutation.mutate(submitData)
+ }
 
   return (
     <form onSubmit={handleSubmit}>

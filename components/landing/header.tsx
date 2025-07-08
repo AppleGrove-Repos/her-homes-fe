@@ -52,7 +52,7 @@ export default function Header() {
      animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
    }
   return (
-    <header className="relative w-full py-3 px-4 md:px-6 lg:px-8 mb-10 bg-[#ffffff] shadow-lg  ">
+    <header className="relative w-full md:py-3 py-[-20px] px-4 md:px-6 lg:px-8 mb-10 bg-[#ffffff] shadow-lg  ">
       <div className="absolute top-[600px] -right-[100px] w-[400px] h-72 z-0 pointer-events-none filter blur-md">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
           <path

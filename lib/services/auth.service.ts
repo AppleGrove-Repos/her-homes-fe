@@ -12,6 +12,14 @@ export interface LoginType {
   email: string
   password: string
 }
+// export interface ContactUsDto {
+//   firstName: string
+//   lastName: string
+//   email: string
+//   message: string
+//   phoneNumber?: string
+//   inquiryReason: string
+// }
 
 export interface User {
   id: string
@@ -287,13 +295,55 @@ export const verifyResetToken = async (
     throw new Error(errorMessage)
   }
 }
+export interface ContactUsDto {
+  firstName: string
+  lastName: string
+  email: string
+  message: string
+  phoneNumber: string
+  inquiryReason: string
+}
+export interface RequestPartnershipDto {
+  institutionName: string
+  fullName: string
+  role: string
+  email: string
+  phoneNumber: string
+}
 
 export interface ResetPasswordParams {
   email: string
   token: string
   password: string
 }
+export const contactUS = async (data: ContactUsDto) => {
+  try {
+    console.log('Sending payload:', data)
+    const response = await https.post('/contact-us', data)
 
+    toast.success('Message sent successfully')
+    return response.data.data
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || 'Failed to send message'
+    toast.error(errorMessage)
+    throw new Error(errorMessage)
+  }
+}
+export const RequestPartnership = async (data: RequestPartnershipDto) => {
+  try {
+    console.log('Sending payload:', data)
+    const response = await https.post('/partnership', data)
+
+    toast.success('Message sent successfully')
+    return response.data.data
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || 'Failed to send message'
+    toast.error(errorMessage)
+    throw new Error(errorMessage)
+  }
+}
 export const resetPassword = async (
   params: ResetPasswordParams
 ): Promise<void> => {

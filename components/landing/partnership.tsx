@@ -5,11 +5,31 @@ import type React from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Rocket, Puzzle, Users } from 'lucide-react'
+// import { Rocket, Puzzle, Users } from 'lucide-react'
+import { Toaster, toast } from 'react-hot-toast'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import Image from 'next/image'
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
+import { RequestPartnership } from '@/lib/services/auth.service'
+
+interface RequestPartnershipDto {
+  institutionName: string
+  fullName: string
+  role: string
+  email: string
+  phoneNumber: string
+}
+
+// Form data interface
+interface PartnershipFormData {
+  institutionName: string
+  contactPerson: string
+  contactRole: string
+  email: string
+  phoneNumber: string
+}
 
 export function PartnershipContent() {
   const [formData, setFormData] = useState({
@@ -20,10 +40,77 @@ export function PartnershipContent() {
     phoneNumber: '',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const partnershipMutation = useMutation({
+    mutationFn: RequestPartnership,
+    onSuccess: (data) => {
+      console.log('Partnership request submitted successfully:', data)
+      // Clear form on success
+      setFormData({
+        institutionName: '',
+        contactPerson: '',
+        contactRole: '',
+        email: '',
+        phoneNumber: '',
+      })
+    },
+    onError: (error: Error) => {
+      console.error('Partnership request submission failed:', error)
+    },
+  })
+
+  const validateForm = (): boolean => {
+    const requiredFields = [
+      'institutionName',
+      'contactPerson',
+      'contactRole',
+      'email',
+      'phoneNumber',
+    ]
+
+    for (const field of requiredFields) {
+      if (!formData[field as keyof PartnershipFormData]?.trim()) {
+        toast.error(
+          `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+        )
+        return false
+      }
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address')
+      return false
+    }
+
+    // Phone validation
+    if (formData.phoneNumber.length < 10) {
+      toast.error('Please enter a valid phone number')
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Form submitted:', formData)
+
+    // Validate form
+    if (!validateForm()) {
+      return
+    }
+
+    // Map form data to API format
+    const submitData: RequestPartnershipDto = {
+      institutionName: formData.institutionName.trim(),
+      fullName: formData.contactPerson.trim(), // Map contactPerson to fullName
+      role: formData.contactRole.trim(), // Map contactRole to role
+      email: formData.email.trim(),
+      phoneNumber: formData.phoneNumber.trim(),
+    }
+
+    // Submit using mutation
+    partnershipMutation.mutate(submitData)
   }
 
   const handleInputChange = (field: string, value: string) => {
