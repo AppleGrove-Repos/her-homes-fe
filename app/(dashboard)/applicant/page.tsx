@@ -475,13 +475,13 @@ function ApplicantDashboard() {
                 <ApplicantPropertyCard
                   key={property.id || property._id}
                   id={property.id || property._id || ''}
-                  name={property.name}
+                  name={property.title || property.name || ''}
                   type={property.propertyType}
-                  location={property.location}
+                  location={property.propertyAddress || property.location || ''}
                   price={`₦${property.price.toLocaleString()}`}
                   monthlyPayment={`₦${property.minMonthlyPayment.toLocaleString()}`}
                   minDownPaymentPercent={`${property.minDownPaymentPercent.toLocaleString()}% Down Payment`}
-                  rating={property.rating}
+                  rating={property.rating ?? 0}
                   tags={property.tags || []}
                   imageUrl={
                     property.images && property.images.length > 0

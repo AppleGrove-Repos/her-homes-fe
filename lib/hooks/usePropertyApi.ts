@@ -8,23 +8,30 @@ import axios from "axios"
 export interface Property {
   _id: string
   id: string
-  name: string
+  title: string
+  name?: string // Keep for backward compatibility
   propertyType: string
-  location: string
+  propertyAddress: string
+  location?: string // Keep for backward compatibility
   price: number
   minDownPaymentPercent: number
   minMonthlyPayment: number
-  rating: number
+  rating?: number
   images: string[]
-  description: string
-  bedrooms: number
+  propertyDescription?: string
+  description?: string // Keep for backward compatibility
+  neighborhoodDescription?: string
+  nearbyLandmark?: string
+  specifications?: Record<string, string | number>
+  bedrooms?: number // Keep for backward compatibility
   videos: string[]
-  developer: any
-  status: string
-  createdAt: string
-  updatedAt: string
-  __v: number
+  developer?: any
+  status?: string
+  createdAt?: string
+  updatedAt?: string
+  __v?: number
   tags?: string[]
+  features?: Record<string, boolean>
 }
 
 // Response interface
@@ -83,7 +90,7 @@ export const useGetProperties = (propertyId: string) => {
       try {
         // Direct API call without authentication check
         const response = await http.get<ApiResponse<Property>>(
-          `/listing/${propertyId}`
+          `/properties/${propertyId}`
         )
         return response.data
       } catch (error) {
@@ -123,7 +130,7 @@ export const useGetPropertyListings = (filters?: PropertyFilterParams) => {
 
         const queryString = queryParams.toString()
         const response = await http.get<ApiResponse<Property[]>>(
-          `/listing/${queryString ? `?${queryString}` : ''}`
+          `/properties${queryString ? `?${queryString}` : ''}`
         )
         return response.data
       } catch (error) {
@@ -164,7 +171,7 @@ export const useGetDeveloperPropertyListings = (
 
         const queryString = queryParams.toString()
         const response = await https.get<ApiResponse<Property[]>>(
-          `/listing/developer${queryString ? `?${queryString}` : ''}`
+          `/properties/developer${queryString ? `?${queryString}` : ''}`
         )
         return response.data
       } catch (error) {
@@ -182,7 +189,7 @@ export const useGetPropertyFilters = () => {
     queryKey: ['propertyFilters'],
     queryFn: async () => {
       try {
-        const response = await https.get<ApiResponse<any>>('/listing/filters')
+        const response = await https.get<ApiResponse<any>>('/properties/filters')
         return response.data
       } catch (error) {
         errorHandler(error)
@@ -198,9 +205,9 @@ export const useSaveProperty = () => {
   return useMutation({
     mutationFn: async ({ propertyId }: { propertyId: string }) => {
       try {
-        const response = await https.post<ApiResponse<any>>('/user/favorites', {
-          propertyId,
-        })
+        const response = await https.post<ApiResponse<any>>(
+          `/properties/${propertyId}/toggle-favorite`
+        )
         toast.success('Property saved to favorites')
         return response.data
       } catch (error) {
@@ -217,7 +224,7 @@ export const useRemoveFromFavorites = () => {
     mutationFn: async ({ propertyId }: { propertyId: string }) => {
       try {
         const response = await https.delete<ApiResponse<any>>(
-          `/user/favorites/${propertyId}`
+          `/properties/${propertyId}/toggle-favorite`
         )
         toast.success('Property removed from favorites')
         return response.data
@@ -390,6 +397,41 @@ export function useGetSimilarProperties(property: any) {
     : []
 
   return { similarProperties, isLoading }
+}
+
+// Get properties with the same property type
+export const useGetPropertiesByType = (propertyType: string, excludePropertyId?: string) => {
+  return useQuery({
+    queryKey: ['propertiesByType', propertyType, excludePropertyId],
+    queryFn: async () => {
+      try {
+        // Use the existing property listings API with property type filter
+        const queryParams = new URLSearchParams()
+        queryParams.append('propertyType', propertyType)
+        queryParams.append('limit', '10') // Get more to account for filtering out current property
+
+        const response = await http.get<ApiResponse<Property[]>>(
+          `/properties?${queryParams.toString()}`
+        )
+        
+        // Filter out the current property if excludePropertyId is provided
+        let properties = response.data.data || []
+        if (excludePropertyId) {
+          properties = properties.filter(p => p._id !== excludePropertyId)
+        }
+        
+        return {
+          ...response.data,
+          data: properties.slice(0, 3) // Return max 3 similar properties
+        }
+      } catch (error) {
+        errorHandler(error)
+        throw error
+      }
+    },
+    enabled: !!propertyType,
+    retry: 1,
+  })
 }
 
 // Toggle property favorite status

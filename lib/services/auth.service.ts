@@ -44,7 +44,7 @@ export const logoutUser = () => {
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
     console.log('Fetching user data from:', `${API_URL}/user`)
-    const response = await https.get('/user') // Axios instance with cookies enabled
+    const response = await https.get('/users/profile-picture') // Axios instance with cookies enabled
     console.log('User data response:', response.data)
 
     return response.data.data
@@ -74,7 +74,7 @@ export const changePassword = async (data: {
       throw new Error('No authentication token found')
     }
 
-    const response = await axios.put(`${API_URL}/user/change-password`, data, {
+    const response = await axios.put(`${API_URL}/users/change-password`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -98,7 +98,7 @@ export const updateProfilePicture = async (formData: FormData) => {
     }
 
     const response = await axios.put(
-      `${API_URL}/user/profile-picture`,
+      `${API_URL}/users/profile-picture`,
       formData,
       {
         headers: {
@@ -169,7 +169,7 @@ export const fetchUser = async (): Promise<User> => {
   try {
     console.log('Fetching user data from:', `${API_URL}/user`)
 
-    const response = await axios.get(`${API_URL}/user`)
+    const response = await axios.get(`${API_URL}/users/profile`)
 
     console.log('User data response received:', response.status)
 

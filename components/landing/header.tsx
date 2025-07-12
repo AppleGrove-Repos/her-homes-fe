@@ -79,9 +79,9 @@ export default function Header() {
             <Image
               src="/assets/images/header-logo.png"
               alt="footer-logo"
-              width={100}
-              height={100}
-              className="h-10 w-auto object-contain align-middle"
+              width={10}
+              height={10}
+              className="h-8 w-auto object-contain align-middle"
             />
           </div>
           <span className="text-base font-medium hidden sm:block">

@@ -24,9 +24,13 @@ import {
   MessageCircle,
   Phone,
   Award,
+  Landmark,
+  LandPlot,
+  ChefHat,
   Play,
   Share,
 } from 'lucide-react'
+import { getFeatureIcon, getSpecificationIcon, formatTextForDisplay } from '@/lib/utils/icon-utils'
 import { Button } from '@/components/ui/button'
 import Header from '@/components/landing/header'
 import Footer from '@/components/landing/footer'
@@ -35,6 +39,7 @@ import {
   useGetProperties,
   useSaveProperty,
   useRemoveFromFavorites,
+  useGetPropertiesByType,
 } from '@/lib/hooks/usePropertyApi'
 import toast from 'react-hot-toast'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -60,6 +65,22 @@ function PropertyDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false)
   const { user } = useAuth()
 
+  // Helper function to format feature names
+  const formatFeatureName = (feature: string) => {
+    return formatTextForDisplay(feature)
+  }
+
+  // Helper function to format specification names
+  const formatSpecificationName = (specName: string) => {
+    return formatTextForDisplay(specName)
+  }
+
+  // Helper function to format property type for display
+  const formatPropertyType = (propertyType: string) => {
+    if (!propertyType) return ''
+    return propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase()
+  }
+
   const propertyId = params.id as string
 
   // Use React Query hooks - no auth required for viewing property details
@@ -71,6 +92,28 @@ function PropertyDetailPage() {
 
   const property = propertyResponse?.data
   const error = queryError ? (queryError as Error).message : null
+
+  // Fetch similar properties with the same property type
+  const {
+    data: similarPropertiesResponse,
+    isLoading: similarPropertiesLoading,
+    error: similarPropertiesError,
+  } = useGetPropertiesByType(property?.propertyType || '', property?._id)
+
+  const similarProperties = similarPropertiesResponse?.data || []
+  
+  // Only show similar properties section if we have a property type
+  const shouldShowSimilarProperties = property?.propertyType
+
+  // Console log to see the data
+  console.log('Property Data:', property)
+  console.log('Features:', property?.features)
+  console.log('Specifications:', property?.specifications)
+  console.log('Similar Properties:', similarProperties)
+  console.log('Property Type:', property?.propertyType)
+  console.log('Similar Properties Loading:', similarPropertiesLoading)
+  console.log('Similar Properties Length:', similarProperties.length)
+  console.log('Should Show Similar Properties:', shouldShowSimilarProperties)
 
   // These mutations require authentication
   const savePropertyMutation = useSaveProperty()
@@ -154,6 +197,18 @@ function PropertyDetailPage() {
     }
   }
 
+  const toggleSimilarPropertyFavorite = (e: React.MouseEvent, similarPropertyId: string) => {
+    e.stopPropagation()
+    if (!user) {
+      router.push(`/login?redirect=/listings/${propertyId}&action=favorite`)
+      return
+    }
+
+    // For now, just log the action. You can implement the actual favorite toggle logic here
+    console.log('Toggle favorite for similar property:', similarPropertyId)
+    toast.success('Favorite functionality for similar properties coming soon!')
+  }
+
   const handleActionClick = (action: string, e: React.MouseEvent) => {
     e.preventDefault()
      if (!user) {
@@ -180,8 +235,8 @@ function PropertyDetailPage() {
     if (navigator.share) {
       navigator
         .share({
-          title: property?.name || 'Property Listing',
-          text: `Check out this property: ${property?.name}`,
+          title: property?.title || property?.name || 'Property Listing',
+          text: `Check out this property: ${property?.title || property?.name || 'Property'}`,
           url: window.location.href,
         })
         .catch(() => {
@@ -303,7 +358,7 @@ function PropertyDetailPage() {
                 Listings
               </span>
               <span className="mx-2">/</span>
-              <span className="text-[#64111F]">{property.name}</span>
+                              <span className="text-[#64111F]">{property.title || property.name || ''}</span>
             </div>
           </div>
           {/* <Button
@@ -373,7 +428,7 @@ function PropertyDetailPage() {
                               galleryMedia[currentImageIndex] ||
                               '/placeholder.svg?height=600&width=800'
                             }
-                            alt={property.name}
+                            alt={property.title || property.name || ''}
                             fill
                             className="object-cover"
                           />
@@ -466,18 +521,18 @@ function PropertyDetailPage() {
               {/* Right: Property Details Card */}
               <div className="bg-white p-8 rounded-2xl h-[500px]">
                 <h1 className="text-2xl font-medium text-gray-900 mb-2">
-                  3-Bedroom Bungalow in Lekki
+                  {property.title || property.name || 'Property Title'}
                 </h1>
                 <div className="flex items-center text-gray-600 mb-4">
                   <MapPin
                     className="h-4 w-4 text-[#546B2F] mr-2"
                     strokeWidth={4}
                   />
-                  <span className="text-sm">Lekki Phase 1, Lagos, Nigeria</span>
+                  <span className="text-sm">{property.propertyAddress || property.location || 'Location not specified'}</span>
                 </div>
 
                 <div className="text-3xl font-medium text-[#546B2F] mb-6">
-                  ₦35,000,000
+                  ₦{property.price?.toLocaleString() || 'N/A'}
                 </div>
 
                 <div className="flex flex-col gap-3 mb-6 sm:flex-row">
@@ -507,34 +562,48 @@ function PropertyDetailPage() {
 
                 {/* Property specs */}
                 <div className="grid grid-rows-2 gap-4 text-sm">
-                  <div className="flex items-center">
-                    <Bed
-                      className="h-4 w-4 text-[#546B2F] mr-2"
-                      strokeWidth={3}
-                    />
-                    <span>3 Bedrooms</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Home
-                      className="h-4 w-4 text-[#546B2F] mr-2"
-                      strokeWidth={3}
-                    />
-                    <span>180 sqm</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Bath
-                      className="h-4 w-4 text-[#546B2F] mr-2"
-                      strokeWidth={3}
-                    />
-                    <span>3 Bathrooms</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Car
-                      className="h-4 w-4 text-[#546B2F] mr-2"
-                      strokeWidth={3}
-                    />
-                    <span>2 Parking</span>
-                  </div>
+                  {property.specifications && typeof property.specifications === 'object' ? (
+                    Object.entries(property.specifications)
+                      .slice(0, 4)
+                      .map(([specName, specValue], index) => (
+                        <div key={index} className="flex items-center">
+                          {getSpecificationIcon(specName)}
+                          <span>{formatSpecificationName(specName)}: {specValue}</span>
+                        </div>
+                      ))
+                  ) : (
+                    // Fallback to basic specs if no specifications object
+                    <>
+                      <div className="flex items-center">
+                        <Bed
+                          className="h-4 w-4 text-[#546B2F] mr-2"
+                          strokeWidth={3}
+                        />
+                        <span>{property.bedrooms || 0} Bedrooms</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Home
+                          className="h-4 w-4 text-[#546B2F] mr-2"
+                          strokeWidth={3}
+                        />
+                        <span>N/A</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Bath
+                          className="h-4 w-4 text-[#546B2F] mr-2"
+                          strokeWidth={3}
+                        />
+                        <span>N/A</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Car
+                          className="h-4 w-4 text-[#546B2F] mr-2"
+                          strokeWidth={3}
+                        />
+                        <span>N/A</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -549,36 +618,47 @@ function PropertyDetailPage() {
                     Property Overview
                   </h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {/* Property Type */}
                     <div className="text-center">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Home className="h-6 w-6 text-gray-600" />
+                      <div className="w-12 h-12 bg-transparent rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Home className="h-6 w-6 text-[#546B2F]" />
                       </div>
                       <p className="text-sm text-gray-500 mb-1">
                         Property Type
                       </p>
-                      <p className="font-medium">Bungalow</p>
+                      <p className="font-medium">{property.propertyType || 'N/A'}</p>
                     </div>
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Calendar className="h-6 w-6 text-gray-600" />
-                      </div>
-                      <p className="text-sm text-gray-500 mb-1">Year Built</p>
-                      <p className="font-medium">2023</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Check className="h-6 w-6 text-gray-600" />
-                      </div>
-                      <p className="text-sm text-gray-500 mb-1">Finishing</p>
-                      <p className="font-medium">Fully Finished</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Star className="h-6 w-6 text-gray-600" />
-                      </div>
-                      <p className="text-sm text-gray-500 mb-1">Status</p>
-                      <p className="font-medium">New</p>
-                    </div>
+                    
+                    {/* First 3 available features from the object */}
+                    {property.features && typeof property.features === 'object' ? (
+                      Object.entries(property.features)
+                        .filter(([_, isAvailable]) => isAvailable)
+                        .slice(0, 3)
+                        .map(([feature, isAvailable], index) => (
+                          <div key={index} className="text-center">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                              {getFeatureIcon(feature)}
+                            </div>
+                            <p className="text-sm text-gray-500 mb-1">
+                              {formatFeatureName(feature)}
+                            </p>
+                            {/* <p className="font-medium">Available</p> */}
+                          </div>
+                        ))
+                    ) : (
+                      // If no features object, show placeholder features
+                      Array.from({ length: 3 }).map((_, index) => (
+                        <div key={`placeholder-${index}`} className="text-center">
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Star className="h-6 w-6 text-gray-600" />
+                          </div>
+                          <p className="text-sm text-gray-500 mb-1">
+                            Feature {index + 1}
+                          </p>
+                          <p className="font-medium">N/A</p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -591,13 +671,13 @@ function PropertyDetailPage() {
                     <div className="space-y-4">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Total Price</span>
-                        <span className="font-semibold">₦35,000,000</span>
+                        <span className="font-semibold">₦{property.price?.toLocaleString() || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">
-                          Down Payment (30%)
+                          Down Payment ({property.minDownPaymentPercent || 0}%)
                         </span>
-                        <span className="font-semibold">₦7,000,000</span>
+                        <span className="font-semibold">₦{downPaymentAmount?.toLocaleString() || 'N/A'}</span>
                       </div>
                       <div className="text-[#546B2F] text-sm font-medium">
                         Pre-qualified Available
@@ -613,7 +693,7 @@ function PropertyDetailPage() {
                         </select>
                       </div>
                       <div className="text-2xl font-bold text-gray-900">
-                        ₦280,000/month
+                        ₦{property.minMonthlyPayment?.toLocaleString() || 'N/A'}/month
                       </div>
                       <Button className="w-full bg-[#7C0A02] hover:bg-[#600000]">
                         Check Your Eligibility
@@ -628,49 +708,38 @@ function PropertyDetailPage() {
                     Property Description
                   </h2>
                   <p className="text-gray-700 leading-relaxed mb-6">
-                    This stunning 3-bedroom bungalow is located in the
-                    prestigious Lekki Phase 1, offering modern living in one of
-                    Lagos' most sought-after neighborhoods.
+                    {property.propertyDescription || property.description || 'No description available.'}
                   </p>
 
-                  <h3 className="font-semibold mb-4">Key Features</h3>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div className="flex items-center">
-                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
-                      <span className="text-sm">POP ceiling throughout</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
-                      <span className="text-sm">
-                        Marble flooring in living areas
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
-                      <span className="text-sm">CCTV-ready infrastructure</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
-                      <span className="text-sm">
-                        Modern kitchen with granite countertops
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Check className="h-4 w-4 text-[#546B2F] mr-3" />
-                      <span className="text-sm">En-suite bathrooms</span>
-                    </div>
-                  </div>
+                  {property.features && typeof property.features === 'object' && Object.keys(property.features).length > 0 && (
+                    <>
+                      <h3 className="font-semibold mb-4">Key Features</h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {Object.entries(property.features)
+                          .filter(([_, isAvailable]) => isAvailable)
+                          .map(([feature, isAvailable], index) => (
+                            <div key={index} className="flex items-center">
+                              <Check className="h-4 w-4 text-[#546B2F] mr-3" />
+                              <span className="text-sm capitalize">{formatFeatureName(feature)}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Neighborhood */}
                 <div className="bg-white p-6 rounded-2xl">
                   <h2 className="text-xl font-semibold mb-4">Neighborhood</h2>
                   <p className="text-gray-700 leading-relaxed">
-                    Lekki Phase 1 is known for its excellent infrastructure,
-                    proximity to Victoria Island, and access to top-tier
-                    amenities including international schools, hospitals, and
-                    shopping centers.
+                    {property.neighborhoodDescription || 'No neighborhood description available.'}
                   </p>
+                  {property.nearbyLandmark && (
+                    <div className="mt-4">
+                      <h3 className="font-semibold mb-2">Nearby Landmarks</h3>
+                      <p className="text-gray-600 text-sm">{property.nearbyLandmark}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Location & Map */}
@@ -683,7 +752,7 @@ function PropertyDetailPage() {
                         Interactive Map
                       </p>
                       <p className="text-sm text-gray-500">
-                        Lekki Phase 1, Lagos
+                        {property.propertyAddress || property.location || 'Location not specified'}
                       </p>
                     </div>
                   </div>
@@ -755,15 +824,17 @@ function PropertyDetailPage() {
                         {' '}
                         {property.developer?.companyName || 'Unknown Company'}
                       </p>
-                      <p className="text-sm text-gray-600 flex items-center">
-                        Verified Her Homes Partner
-                        <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#546B2F]">
-                          <Check
-                            className="h-3 w-3 text-white"
-                            strokeWidth={3}
-                          />
-                        </span>
-                      </p>
+                      {property.developer?.isVerified && (
+                        <p className="text-sm text-gray-600 flex items-center">
+                          Verified Her Homes Partner
+                          <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#546B2F]">
+                            <Check
+                              className="h-3 w-3 text-white"
+                              strokeWidth={3}
+                            />
+                          </span>
+                        </p>
+                      )}
                       <div className="flex items-center">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
@@ -821,163 +892,110 @@ function PropertyDetailPage() {
                 </div> */}
 
                 {/* Similar Properties */}
-                <div className="bg-white p-6 rounded-2xl">
-                  <h3 className="font-semibold mb-4">Similar Properties</h3>
-                  <div className="space-y-4">
-                    <div
-                      className="block cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-2 -m-2"
-                      onClick={() => router.push('/listing/property-2')}
-                    >
-                      <div className="relative h-32 w-full rounded-lg overflow-hidden mb-3">
-                        <Image
-                          src="/placeholder.svg?height=200&width=300"
-                          alt="2-Bedroom Apartment"
-                          fill
-                          className="object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                        {/* Heart icon for favorites */}
-                        <button
-                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Handle favorite toggle for this property
-                            console.log('Toggle favorite for property-2')
-                          }}
-                        >
-                          <Heart className="h-3 w-3 text-gray-600 hover:text-red-500" />
-                        </button>
+                {shouldShowSimilarProperties && (
+                  <div className="bg-white p-6 rounded-2xl">
+                    <h3 className="font-semibold mb-2">Similar Properties</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Other {formatPropertyType(property?.propertyType || '')}s you might like
+                    </p>
+                    {similarPropertiesLoading ? (
+                      <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="animate-pulse">
+                            <div className="h-32 bg-gray-200 rounded-lg mb-3"></div>
+                            <div className="space-y-2">
+                              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <h4 className="font-medium text-sm hover:text-[#546B2F] transition-colors">
-                          2-Bedroom Apartment
-                        </h4>
-                        <div className="flex items-center text-xs text-gray-500 mb-1">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>Lekki Phase 2</span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          ₦28,000,000
-                        </p>
-                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                          <div className="flex items-center">
-                            <Bed className="h-3 w-3 mr-1" />
-                            <span>2</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Bath className="h-3 w-3 mr-1" />
-                            <span>2</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Home className="h-3 w-3 mr-1" />
-                            <span>120 sqm</span>
-                          </div>
-                        </div>
+                    ) : similarPropertiesError ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 text-sm">Unable to load similar properties</p>
                       </div>
-                    </div>
-
-                    <div
-                      className="block cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-2 -m-2"
-                      onClick={() => router.push('/listing/property-3')}
-                    >
-                      <div className="relative h-32 w-full rounded-lg overflow-hidden mb-3">
-                        <Image
-                          src="/placeholder.svg?height=200&width=300"
-                          alt="4-Bedroom Duplex"
-                          fill
-                          className="object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                        {/* Heart icon for favorites */}
-                        <button
-                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Handle favorite toggle for this property
-                            console.log('Toggle favorite for property-3')
-                          }}
-                        >
-                          <Heart className="h-3 w-3 text-gray-600 hover:text-red-500" />
-                        </button>
+                    ) : similarProperties.length > 0 ? (
+                      <div className="space-y-4">
+                        {similarProperties.map((similarProperty) => (
+                          <div
+                            key={similarProperty._id}
+                            className="block cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-2 -m-2"
+                            onClick={() => router.push(`/listings/${similarProperty._id}`)}
+                          >
+                            <div className="relative h-32 w-full rounded-lg overflow-hidden mb-3">
+                                                          <Image
+                              src={similarProperty.images?.[0] || "/placeholder.svg?height=200&width=300"}
+                              alt={similarProperty.title || similarProperty.name || 'Property'}
+                              fill
+                              className="object-cover hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                // Fallback to placeholder if image fails to load
+                                const target = e.target as HTMLImageElement
+                                target.src = "/placeholder.svg?height=200&width=300"
+                              }}
+                            />
+                              {/* Heart icon for favorites */}
+                              <button
+                                className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition-colors"
+                                onClick={(e) => toggleSimilarPropertyFavorite(e, similarProperty._id)}
+                              >
+                                <Heart className="h-3 w-3 text-gray-600 hover:text-red-500" />
+                              </button>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm hover:text-[#546B2F] transition-colors">
+                                {similarProperty.title || similarProperty.name}
+                              </h4>
+                              <div className="flex items-center text-xs text-gray-500 mb-1">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                <span>{similarProperty.propertyAddress || similarProperty.location}</span>
+                              </div>
+                              <p className="text-sm font-semibold text-gray-900">
+                                ₦{formatCurrency(similarProperty.price)}
+                              </p>
+                              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                {similarProperty.specifications?.bedrooms && (
+                                  <div className="flex items-center">
+                                    <Bed className="h-3 w-3 mr-1" />
+                                    <span>{similarProperty.specifications.bedrooms}</span>
+                                  </div>
+                                )}
+                                {similarProperty.specifications?.bathrooms && (
+                                  <div className="flex items-center">
+                                    <Bath className="h-3 w-3 mr-1" />
+                                    <span>{similarProperty.specifications.bathrooms}</span>
+                                  </div>
+                                )}
+                                {similarProperty.specifications?.area && (
+                                  <div className="flex items-center">
+                                    <Home className="h-3 w-3 mr-1" />
+                                    <span>{similarProperty.specifications.area} sqm</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {similarProperties.length > 0 && (
+                          <div className="pt-4 border-t border-gray-100">
+                            <Button
+                              variant="outline"
+                              className="w-full text-sm"
+                              onClick={() => router.push(`/listings?propertyType=${property?.propertyType}`)}
+                            >
+                              View All {formatPropertyType(property?.propertyType || '')}s
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <h4 className="font-medium text-sm hover:text-[#546B2F] transition-colors">
-                          4-Bedroom Duplex
-                        </h4>
-                        <div className="flex items-center text-xs text-gray-500 mb-1">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>Ajah, Lagos</span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          ₦42,000,000
-                        </p>
-                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                          <div className="flex items-center">
-                            <Bed className="h-3 w-3 mr-1" />
-                            <span>4</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Bath className="h-3 w-3 mr-1" />
-                            <span>4</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Home className="h-3 w-3 mr-1" />
-                            <span>250 sqm</span>
-                          </div>
-                        </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 text-sm">No similar properties found</p>
                       </div>
-                    </div>
-
-                    <div
-                      className="block cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-2 -m-2"
-                      onClick={() => router.push('/listing/property-4')}
-                    >
-                      <div className="relative h-32 w-full rounded-lg overflow-hidden mb-3">
-                        <Image
-                          src="/placeholder.svg?height=200&width=300"
-                          alt="3-Bedroom Terrace"
-                          fill
-                          className="object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                        {/* Heart icon for favorites */}
-                        <button
-                          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Handle favorite toggle for this property
-                            console.log('Toggle favorite for property-4')
-                          }}
-                        >
-                          <Heart className="h-3 w-3 text-gray-600 hover:text-red-500" />
-                        </button>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm hover:text-[#546B2F] transition-colors">
-                          3-Bedroom Terrace
-                        </h4>
-                        <div className="flex items-center text-xs text-gray-500 mb-1">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>Ikoyi, Lagos</span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          ₦38,500,000
-                        </p>
-                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                          <div className="flex items-center">
-                            <Bed className="h-3 w-3 mr-1" />
-                            <span>3</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Bath className="h-3 w-3 mr-1" />
-                            <span>3</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Home className="h-3 w-3 mr-1" />
-                            <span>200 sqm</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                </div>
+                )}
 
                 {/* Service Cards */}
                 <div className="space-y-4">

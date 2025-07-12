@@ -621,20 +621,20 @@ function ListingsContent() {
                 <PropertyCard
                   key={property.id || property._id}
                   id={property.id || property._id || ''}
-                  name={property.name}
+                  name={property.title || property.name || ''}
                   type={property.propertyType}
-                  location={property.location}
-                  price={`₦${property.price.toLocaleString()}`}
-                  monthlyPayment={`₦${property.minMonthlyPayment.toLocaleString()}`}
-                  minDownPaymentPercent={`${property.minDownPaymentPercent.toLocaleString()}% Down Payment`}
-                  rating={property.rating}
+                  location={property.propertyAddress || property.location || ''}
+                  price={`₦${property.price?.toLocaleString?.() ?? 'N/A'}`}
+                  monthlyPayment={`₦${property.minMonthlyPayment !== undefined ? property.minMonthlyPayment.toLocaleString() : 'N/A'}`}
+                  minDownPaymentPercent={`${property.minDownPaymentPercent !== undefined ? property.minDownPaymentPercent.toLocaleString() : 'N/A'}% Down Payment`}
+                  rating={property.rating ?? 0}
                   tags={property.tags || []}
                   imageUrl={
                     property.images && property.images.length > 0
                       ? property.images[0]
                       : '/placeholder.jpg'
                   }
-                  onClick={() => handlePropertyClick(property.id)}
+                  onClick={() => handlePropertyClick(property.id || property._id)}
                   isSaved={false} // Provide a default value or dynamic value
                 />
               ))}

@@ -33,7 +33,7 @@ import type { Property } from '@/lib/types/types'
 const propertyTypes = [
   { label: 'All Types', value: '', id: 'all' },
   { label: 'Apartment', value: 'apartment', id: 'apartment' },
-  { label: 'House', value: 'house', id: 'house' },
+  { label: 'House', value: 'house', id: 'house' },    
   { label: 'Condo', value: 'condo', id: 'condo' },
   { label: 'Townhouse', value: 'townhouse', id: 'townhouse' },
   { label: 'Land', value: 'land', id: 'land' },
@@ -57,6 +57,7 @@ export default function ListingsPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>('')
+  const [showQuickTips, setShowQuickTips] = useState(true)
 
   const { data: propertyResponse, isLoading } =
     useGetDeveloperPropertyListings(filterParams)
@@ -132,8 +133,12 @@ export default function ListingsPage() {
 
   // Delete property mutation
   const deletePropertyMutation = useMutation({
-    mutationFn: (id: string) => deleteProperty(id),
-    onSuccess: () => {
+    mutationFn: (id: string) => {
+      console.log('Mutation function called with ID:', id)
+      return deleteProperty(id)
+    },
+    onSuccess: (data) => {
+      console.log('Delete mutation success:', data)
       toast.success('Property deleted successfully')
       setDeleteModalOpen(false)
       setPropertyToDelete(null)
@@ -142,6 +147,8 @@ export default function ListingsPage() {
     onError: (error) => {
       console.error('Error deleting property:', error)
       toast.error('Failed to delete property')
+      setDeleteModalOpen(false)
+      setPropertyToDelete(null)
     },
   })
 
@@ -164,12 +171,22 @@ export default function ListingsPage() {
   }, [searchParams])
 
   const openDeleteModal = (id: string) => {
+    console.log('Opening delete modal for property ID:', id)
     setPropertyToDelete(id)
     setDeleteModalOpen(true)
+    console.log('Modal state after setting to true:', true)
   }
 
   const handleDeleteProperty = async () => {
-    if (!propertyToDelete) return
+    console.log('Handling delete property, ID:', propertyToDelete)
+    console.log('Modal state:', deleteModalOpen)
+    console.log('Rendering modal, isOpen:', deleteModalOpen, 'propertyToDelete:', propertyToDelete)
+    console.log('Modal render check - deleteModalOpen:', deleteModalOpen)
+    if (!propertyToDelete) {
+      console.log('No property to delete')
+      return
+    }
+    console.log('Calling delete mutation')
     deletePropertyMutation.mutate(propertyToDelete)
   }
 
@@ -222,9 +239,9 @@ export default function ListingsPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="space-y-6">
         {/* Main Content */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="space-y-6">
           {/* Enhanced Status Tabs */}
           <div className="flex flex-wrap gap-6 border-b border-gray-200">
             {statusOptions.map((option) => (
@@ -263,7 +280,7 @@ export default function ListingsPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
               {properties.length > 0 ? (
                 properties.map((property) => (
                   <PropertyCard
@@ -284,102 +301,161 @@ export default function ListingsPage() {
                     <Home className="h-16 w-16" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                    No Properties Found
+                    {filterParams.status ? `No ${filterParams.status.charAt(0).toUpperCase() + filterParams.status.slice(1)} Properties` : 'No Properties Found'}
                   </h3>
                   <p className="text-gray-600 text-center mb-6">
-                    You haven't added any properties yet or none match your
-                    current filters.
+                    {filterParams.status 
+                      ? `You don't have any ${filterParams.status} properties at the moment. Try switching to a different status or add a new property.`
+                      : filterParams.propertyType
+                      ? `No ${filterParams.propertyType} properties found. Try changing your filters or add a new property.`
+                      : "You haven't added any properties yet or none match your current filters."
+                    }
                   </p>
-                  <Link href="/developers/properties/add">
-                    <Button
-                      variant="filled"
-                      icon={<PlusCircle className="h-4 w-4" />}
-                      iconPosition="left"
-                      className="bg-[#546B2F] hover:bg-green-700 text-white"
-                    >
-                      Add Your First Property
-                    </Button>
-                  </Link>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {filterParams.status && (
+                      <Button
+                        variant="outline"
+                        onClick={() => changeQuery('status', '')}
+                        className="border-[#546B2F] text-[#546B2F] hover:bg-[#546B2F] hover:text-white"
+                      >
+                        View All Properties
+                      </Button>
+                    )}
+                    <Link href="/developers/properties/add">
+                      <Button
+                        variant="filled"
+                        icon={<PlusCircle className="h-4 w-4" />}
+                        iconPosition="left"
+                        className="bg-[#546B2F] hover:bg-green-700 text-white"
+                      >
+                        {filterParams.status || filterParams.propertyType ? 'Add New Property' : 'Add Your First Property'}
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
           )}
         </div>
-
-        {/* Quick Tips Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="p-6 bg-yellow-50 border-yellow-200">
-            <div className="flex items-center gap-2 mb-4">
-              <Lightbulb className="h-5 w-5 text-yellow-600" />
-              <h3 className="font-semibold text-yellow-800">Quick Tips</h3>
-            </div>
-            <div className="space-y-4 text-sm">
-              <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <p className="text-gray-700">Complete all required fields</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <p className="text-gray-700">Upload high-quality photos</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <p className="text-gray-700">
-                  Provide accurate property details
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <p className="text-gray-700">Include proper documentation</p>
-              </div>
-            </div>
-            <div className="mt-6 pt-4 border-t border-yellow-200">
-              <p className="text-xs text-gray-600">
-                Need help?{' '}
-                <button className="text-green-600 hover:underline">
-                  Contact support
-                </button>
-              </p>
-            </div>
-          </Card>
-        </div>
       </div>
 
-      {/* Delete Modal */}
-      <Modal
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 max-w-md mx-auto"
-      >
-        <div className="space-y-4">
-          <div className="flex items-center text-red-600 mb-2">
-            <Trash2 className="h-5 w-5 mr-2" />
-            <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+      {/* Quick Tips - Fixed Bottom Right */}
+      {showQuickTips && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Card className="p-4 bg-yellow-50 border-yellow-200 shadow-lg max-w-xs relative">
+            <button
+              onClick={() => setShowQuickTips(false)}
+              className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              title="Close tips"
+            >
+              <X className="h-3 w-3" />
+            </button>
+            <div className="flex items-center gap-2 mb-3 pr-6">
+              <Lightbulb className="h-4 w-4 text-yellow-600" />
+              <h3 className="font-semibold text-yellow-800 text-sm">Quick Tips</h3>
+            </div>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
+              <p className="text-gray-700">Complete all required fields</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
+              <p className="text-gray-700">Upload high-quality photos</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
+              <p className="text-gray-700">
+                Provide accurate property details
+              </p>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
+              <p className="text-gray-700">Include proper documentation</p>
+            </div>
           </div>
-          <p className="text-gray-600">
-            Are you sure you want to delete this property? This action cannot be
-            undone.
-          </p>
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteModalOpen(false)}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
-              disabled={deletePropertyMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteProperty}
-              className="bg-red-600 hover:bg-red-700 text-white"
-              disabled={deletePropertyMutation.isPending}
-            >
-              {deletePropertyMutation.isPending ? 'Deleting...' : 'Delete'}
-            </Button>
+          <div className="mt-3 pt-2 border-t border-yellow-200">
+            <p className="text-xs text-gray-600">
+              Need help?{' '}
+              <button className="text-green-600 hover:underline">
+                Contact support
+              </button>
+            </p>
+          </div>
+        </Card>
+      </div>
+      )}
+
+      {/* Modern Delete Modal */}
+      {deleteModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300 ease-out"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              console.log('Clicking outside modal to close')
+              setDeleteModalOpen(false)
+            }
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full mx-auto transform transition-all duration-300 ease-out scale-100 opacity-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center animate-pulse">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Delete Property</h3>
+                  <p className="text-sm text-gray-500">This action cannot be undone</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="mb-6">
+                <p className="text-gray-700 leading-relaxed">
+                  Are you sure you want to delete this property? This will permanently remove it from your listings and cannot be recovered.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    console.log('Cancel button clicked')
+                    setDeleteModalOpen(false)
+                  }}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                  disabled={deletePropertyMutation.isPending}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('Delete button in modal clicked')
+                    handleDeleteProperty()
+                  }}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                  disabled={deletePropertyMutation.isPending}
+                >
+                  {deletePropertyMutation.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span className="animate-pulse">Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      Delete Property
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
     </div>
   )
 }
@@ -391,6 +467,8 @@ function PropertyCard({
   property: Property
   onDelete: () => void
 }) {
+  const router = useRouter()
+  
   const statusColors = {
     pending: 'bg-yellow-100 text-yellow-800',
     approved: 'bg-green-100 text-green-800',
@@ -403,86 +481,127 @@ function PropertyCard({
     rejected: '❌',
   }
 
+  const handleViewProperty = () => {
+    router.push(`/developers/properties/${property._id}`)
+  }
+
   return (
-    <Card className="overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
-      <div className="relative h-48">
+    <Card className="overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 min-w-[320px]">
+      <div className="relative h-56">
         <Image
-          src="/placeholder.svg?height=300&width=500"
-          alt={property.name}
+          src={property.images?.[0] || "/placeholder.svg?height=300&width=500"}
+          alt={property.title || property.name || 'Property'}
           fill
           className="object-cover"
+          onError={(e) => {
+            // Fallback to placeholder if image fails to load
+            const target = e.target as HTMLImageElement
+            target.src = "/placeholder.svg?height=300&width=500"
+          }}
         />
         <div
           className={`absolute top-2 right-2 ${
-            statusColors[property.status]
+            property.status && statusColors[property.status]
+              ? statusColors[property.status]
+              : 'bg-gray-100 text-gray-800'
           } px-2 py-1 rounded-md text-xs font-medium shadow-sm flex items-center gap-1`}
         >
-          <span>{statusIcons[property.status]}</span>
-          {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+          <span>
+            {property.status && statusIcons[property.status] ? statusIcons[property.status] : '❓'}
+          </span>
+          {property.status
+            ? property.status.charAt(0).toUpperCase() + property.status.slice(1)
+            : 'Unknown'}
         </div>
       </div>
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="font-semibold truncate text-gray-800">
-              {property.name}
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-5">
+          <div className="flex-1 min-w-0 pr-4">
+            <h3 className="font-semibold text-gray-800 text-lg mb-3 line-clamp-2">
+              {property.title || property.name || 'Untitled Property'}
             </h3>
-            <div className="flex items-center text-gray-600 text-sm mt-1">
-              <MapPin className="h-3 w-3 mr-1 text-green-500" />
-              <span className="truncate">{property.location}</span>
+            <div className="flex items-center text-gray-600 text-sm mb-4">
+              <MapPin className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
+              <span className="truncate">{property.propertyAddress || property.location || 'Location not specified'}</span>
             </div>
           </div>
-          <div className="font-bold text-green-600">
+          <div className="font-bold text-green-600 text-xl ml-4 flex-shrink-0">
             ₦{property.price.toLocaleString()}
           </div>
         </div>
-        <div className="flex items-center justify-between mt-4 text-sm">
+        
+        <div className="flex items-center justify-between mb-6 text-sm">
           <div className="flex items-center text-gray-700">
-            <Bed className="h-4 w-4 mr-1 text-green-500" />
-            <span>{property.bedrooms} Beds</span>
+            <Bed className="h-4 w-4 mr-2 text-green-500" />
+            <span className="font-medium">{property.specifications?.bedrooms || property.bedrooms || 0} Beds</span>
           </div>
           <div className="flex items-center text-gray-700">
-            <Home className="h-4 w-4 mr-1 text-green-500" />
-            <span className="capitalize">{property.propertyType}</span>
+            <Home className="h-4 w-4 mr-2 text-green-500" />
+            <span className="capitalize font-medium">{property.propertyType || 'Unknown'}</span>
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="flex justify-between items-center text-sm">
+        
+        <div className="mb-6 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-600">Submitted: </span>
-              <span className="text-gray-800 font-medium">Dec 15, 2024</span>
+              <span className="text-gray-600 block mb-1">Submitted:</span>
+              <span className="text-gray-800 font-medium">
+                {property.createdAt ? new Date(property.createdAt).toLocaleDateString() : 'N/A'}
+              </span>
             </div>
-            <div className="text-sm">
-              <span className="text-gray-600">Status: </span>
-              <span className="text-green-600 font-medium">Live</span>
+            <div>
+              <span className="text-gray-600 block mb-1">Status:</span>
+              <span className={`font-medium ${
+                property.status === 'approved' ? 'text-green-600' : 
+                property.status === 'pending' ? 'text-yellow-600' : 
+                property.status === 'rejected' ? 'text-red-600' : 'text-gray-600'
+              }`}>
+                {property.status ? property.status.charAt(0).toUpperCase() + property.status.slice(1) : 'Unknown'}
+              </span>
             </div>
           </div>
         </div>
-        <div className="flex justify-between gap-2 mt-4 pt-4 border-t border-gray-200">
-          <div className="flex gap-2">
-            <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded">
+        
+                <div className="flex justify-between gap-3 pt-4 border-t border-gray-200">
+          <div className="flex gap-3">
+            <button 
+              onClick={handleViewProperty}
+              className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="View Property Details"
+            >
               <Eye className="h-4 w-4" />
             </button>
             <Link href={`/developers/properties/edit/${property._id}`}>
-              <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded">
+              <button 
+                className="p-2.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                title="Edit Property"
+              >
                 <Edit className="h-4 w-4" />
-              </button>
+            </button>
             </Link>
           </div>
-          <button className="text-gray-400 hover:text-gray-600">
-            <span className="text-lg">⋯</span>
+          <button 
+            onClick={() => {
+              console.log('Delete button clicked for property:', property._id)
+              onDelete()
+            }}
+            className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete Property"
+          >
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
+        
         {property.status === 'rejected' && (
-          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2 text-red-700 text-sm">
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-700 text-sm mb-2">
               <span>⚠️</span>
               <span className="font-medium">Incomplete documentation.</span>
             </div>
-            <p className="text-red-600 text-xs mt-1">
+            <p className="text-red-600 text-xs mb-3">
               Please provide property title and survey plan.
             </p>
-            <button className="mt-2 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700">
+            <button className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
               Resubmit
             </button>
           </div>

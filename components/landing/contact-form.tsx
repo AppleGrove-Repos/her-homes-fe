@@ -37,6 +37,7 @@ interface ContactFormData {
   message: string
 }
 export default function ContactForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -131,9 +132,14 @@ export default function ContactForm() {
      inquiryReason: formData.reason,
      message: formData.message.trim(),
    }
+   setIsSubmitting(true)
 
    // Submit using mutation
-   contactMutation.mutate(submitData)
+   contactMutation.mutate(submitData,{
+      onSettled: () => {
+        setIsSubmitting(false)
+      },
+   })
  }
 
   return (
@@ -184,7 +190,6 @@ export default function ContactForm() {
           />
         </div>
 
-
         <div>
           <label htmlFor="reason" className="block text-sm font-medium mb-1">
             Reason for Inquiry
@@ -217,8 +222,11 @@ export default function ContactForm() {
           />
         </div>
 
-        <Button type="submit"  className="w-full min-w-[100%] text-center pl-40 text-white bg-rose-900 hover:bg-rose-800">
-          Submit
+        <Button
+          type="submit"
+          className="w-full min-w-[100%] text-center pl-40 text-white bg-rose-900 hover:bg-rose-800"
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Request'}
         </Button>
       </div>
     </form>

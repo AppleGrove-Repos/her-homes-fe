@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import Button from '@/components/common/button'
+import {Button} from '@/components/ui/button'
 import {
   ArrowLeft,
   Check,
@@ -168,16 +168,7 @@ export default function AddPropertyPage() {
   const [newSpecName, setNewSpecName] = useState('')
   const [newSpecValue, setNewSpecValue] = useState('')
 
-  // Price formatting handlers
-  const handlePriceChange = useCallback(
-    (field: 'price' | 'minDownPaymentPercent' | 'minMonthlyPayment') =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatNumberWithCommas(e.target.value)
-        setValue(field, formatted)
-        clearErrors(field)
-      },
-    [setValue, clearErrors]
-  )
+
 
   const handlePropertyTypeChange = useCallback(
     (value: string) => {
@@ -225,7 +216,7 @@ export default function AddPropertyPage() {
     if (images.length === 0)
       errors.push('At least one property image is required')
 
-    // Validate numeric values
+    // Validate numeric values - parse formatted strings to numbers
     const price = parseFormattedNumber(watchedValues.price || '')
     const downPayment = parseFormattedNumber(
       watchedValues.minDownPaymentPercent || ''
@@ -274,7 +265,7 @@ export default function AddPropertyPage() {
         watchedValues.minMonthlyPayment
       )
 
-      if (price > 0 && downPayment > 0 && monthlyPayment > 0) {
+      if (price > 0 && downPayment > 0 && downPayment <= 100 && monthlyPayment > 0) {
         newCompletedSteps.push('pricing')
         newCurrentStep = Math.max(newCurrentStep, 2)
       }
@@ -559,12 +550,12 @@ export default function AddPropertyPage() {
         return vid.startsWith('data:video/')
       })
 
-      // Parse formatted numbers
-      const price = parseFormattedNumber(data.price)
+      // Parse formatted numbers from the form data
+      const price = parseFormattedNumber(data.price || '')
       const minDownPaymentPercent = parseFormattedNumber(
-        data.minDownPaymentPercent
+        data.minDownPaymentPercent || ''
       )
-      const minMonthlyPayment = parseFormattedNumber(data.minMonthlyPayment)
+      const minMonthlyPayment = parseFormattedNumber(data.minMonthlyPayment || '')
 
       // Prepare specifications object with custom specs
       const specifications: {
@@ -607,10 +598,10 @@ export default function AddPropertyPage() {
         nearbyLandmark: data.nearbyLandmark,
         images: validImages,
         videos: validVideos,
-        price,
+        price: price.toString(), // Convert to string for API
         propertyType: data.propertyType,
-        minDownPaymentPercent,
-        minMonthlyPayment,
+        minDownPaymentPercent: minDownPaymentPercent.toString(), // Convert to string for API
+        minMonthlyPayment: minMonthlyPayment.toString(), // Convert to string for API
         specifications,
         features: requiredFeatures,
       }
@@ -837,8 +828,18 @@ export default function AddPropertyPage() {
                           id="price"
                           placeholder="50,000,000"
                           className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500/20 placeholder:text-sm sm:placeholder:text-base"
-                          value={watchedValues.price || ''}
-                          onChange={handlePriceChange('price')}
+                          {...register('price', {
+                            required: 'Price is required',
+                            validate: (value) => {
+                              const numValue = parseFormattedNumber(value || '')
+                              return numValue > 0 || 'Price must be greater than 0'
+                            },
+                            onChange: (e) => {
+                              const formatted = formatNumberWithCommas(e.target.value)
+                              setValue('price', formatted)
+                              clearErrors('price')
+                            }
+                          })}
                         />
                       </div>
                       {errors.price && (
@@ -862,8 +863,18 @@ export default function AddPropertyPage() {
                           id="minDownPaymentPercent"
                           placeholder="20"
                           className="pl-8 border-gray-300 focus:border-green-500 focus:ring-green-500/20 placeholder:text-sm sm:placeholder:text-base"
-                          value={watchedValues.minDownPaymentPercent || ''}
-                          onChange={handlePriceChange('minDownPaymentPercent')}
+                          {...register('minDownPaymentPercent', {
+                            required: 'Down payment percentage is required',
+                            validate: (value) => {
+                              const numValue = parseFormattedNumber(value || '')
+                              return (numValue > 0 && numValue <= 100) || 'Down payment must be between 1-100%'
+                            },
+                            onChange: (e) => {
+                              const formatted = formatNumberWithCommas(e.target.value)
+                              setValue('minDownPaymentPercent', formatted)
+                              clearErrors('minDownPaymentPercent')
+                            }
+                          })}
                         />
                       </div>
                       {errors.minDownPaymentPercent && (
@@ -885,8 +896,18 @@ export default function AddPropertyPage() {
                           id="minMonthlyPayment"
                           placeholder="500,000"
                           className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500/20 placeholder:text-sm sm:placeholder:text-base"
-                          value={watchedValues.minMonthlyPayment || ''}
-                          onChange={handlePriceChange('minMonthlyPayment')}
+                          {...register('minMonthlyPayment', {
+                            required: 'Monthly payment is required',
+                            validate: (value) => {
+                              const numValue = parseFormattedNumber(value || '')
+                              return numValue > 0 || 'Monthly payment must be greater than 0'
+                            },
+                            onChange: (e) => {
+                              const formatted = formatNumberWithCommas(e.target.value)
+                              setValue('minMonthlyPayment', formatted)
+                              clearErrors('minMonthlyPayment')
+                            }
+                          })}
                         />
                       </div>
                       {errors.minMonthlyPayment && (
@@ -1031,9 +1052,10 @@ export default function AddPropertyPage() {
                             <button
                               type="button"
                               onClick={() => removeCustomSpec(index)}
-                              className="text-red-500 hover:text-red-700 text-sm"
+                              className="text-red-500 hover:text-red-700 text-xs sm:text-sm px-2 py-1 rounded-md hover:bg-red-50 transition-all duration-200 flex items-center"
                             >
-                              Remove
+                              <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              <span className="hidden sm:inline">Remove</span>
                             </button>
                           </div>
                         ))}
@@ -1044,11 +1066,14 @@ export default function AddPropertyPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="small"
+                    size="sm"
                     onClick={() => setShowSpecModal(true)}
-                    className="border-green-300 text-green-600 hover:bg-green-50 bg-transparent"
+                    className="border-green-300 text-green-600 hover:bg-green-50 bg-transparent w-full sm:w-auto text-xs sm:text-sm md:text-base p-2 sm:p-3 h-[36px] sm:h-[40px] md:h-[44px] transition-all duration-200"
                   >
-                    + Add Specifications
+                    <span className="flex items-center justify-center">
+                      <span className="mr-1 sm:mr-2">+</span>
+                      Add Specifications
+                    </span>
                   </Button>
                 </div>
               </Card>
@@ -1078,11 +1103,14 @@ export default function AddPropertyPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="small"
+                    size="sm"
                     onClick={() => setShowFeatureModal(true)}
-                    className="border-green-300 text-green-600 hover:bg-green-50 bg-transparent"
+                    className="border-green-300 text-green-600 hover:bg-green-50 bg-transparent w-full sm:w-auto text-xs sm:text-sm md:text-base p-2 sm:p-3 h-[36px] sm:h-[40px] md:h-[44px] transition-all duration-200"
                   >
-                    + Add Features
+                    <span className="flex items-center justify-center">
+                      <span className="mr-1 sm:mr-2">+</span>
+                      Add Features
+                    </span>
                   </Button>
                 </div>
               </Card>
@@ -1129,9 +1157,9 @@ export default function AddPropertyPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(idx)}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity touch-manipulation"
                             >
-                              <X className="h-3 w-3" />
+                              <X className="h-3 w-3 sm:h-3 sm:w-3" />
                             </button>
                             {idx === 0 && (
                               <div className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-2 py-1 rounded">
@@ -1201,9 +1229,9 @@ export default function AddPropertyPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveVideo(idx)}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity touch-manipulation"
                             >
-                              <X className="h-3 w-3" />
+                              <X className="h-3 w-3 sm:h-3 sm:w-3" />
                             </button>
                           </div>
                         ))}
@@ -1314,25 +1342,26 @@ export default function AddPropertyPage() {
               </Card>
 
               {/* Form Actions */}
-              <div className="flex flex-col sm:flex-row sm:justify-between gap-4 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-3 sm:gap-4 pt-6 border-t border-gray-200">
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-gray-300 text-sm sm:text-base text-gray-700 hover:bg-gray-50 bg-transparent flex text-center p-3 h-[50px] sm:h-[60px] items-center justify-center"
+                  className="border-gray-300 text-xs sm:text-sm md:text-base text-gray-700 hover:bg-gray-50 bg-transparent flex items-center justify-center p-2 sm:p-3 h-[44px] sm:h-[48px] md:h-[52px] lg:h-[56px] w-full sm:w-auto transition-all duration-200"
                 >
-                  <FilePen className="w-4 h-4 inline mr-2 sm:mr-3" />
-                  Save as Draft
+                  <FilePen className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Save as Draft</span>
                 </Button>
                 <Button
                   type="submit"
-                  loading={isSubmitting}
                   disabled={isSubmitting}
-                  className="bg-green-600 text-white text-xs sm:text-[12px] hover:bg-green-700 shadow-md transition-all duration-200 flex gap-2 text-center p-3 h-[50px] sm:h-[60px] items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-green-600 text-white text-xs sm:text-sm md:text-base hover:bg-green-700 shadow-md transition-all duration-200 flex items-center justify-center p-2 sm:p-3 h-[44px] sm:h-[48px] md:h-[52px] lg:h-[56px] w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   {!isSubmitting && (
-                    <Upload className="w-4 h-4 inline mr-2 sm:mr-3" />
+                    <Upload className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2 flex-shrink-0" />
                   )}
-                  {isSubmitting ? 'Publishing Property...' : 'Publish Property'}
+                  <span className="whitespace-nowrap">
+                    {isSubmitting ? 'Publishing Property...' : 'Publish Property'}
+                  </span>
                 </Button>
               </div>
             </form>
@@ -1418,8 +1447,8 @@ export default function AddPropertyPage() {
 
       {/* Feature Modal */}
       {showFeatureModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-auto">
             <h3 className="text-base sm:text-lg font-semibold mb-4">
               Add Custom Feature
             </h3>
@@ -1430,18 +1459,19 @@ export default function AddPropertyPage() {
               className="mb-4"
               onKeyPress={(e) => e.key === 'Enter' && addCustomFeature()}
             />
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowFeatureModal(false)}
+                className="w-full sm:w-auto text-xs sm:text-sm p-2 sm:p-3 h-[36px] sm:h-[40px] order-2 sm:order-1"
               >
                 Cancel
               </Button>
               <Button
                 type="button"
                 onClick={addCustomFeature}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto text-xs sm:text-sm p-2 sm:p-3 h-[36px] sm:h-[40px] order-1 sm:order-2"
               >
                 Add Feature
               </Button>
@@ -1472,18 +1502,19 @@ export default function AddPropertyPage() {
                 onKeyPress={(e) => e.key === 'Enter' && addCustomSpec()}
               />
             </div>
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowSpecModal(false)}
+                className="w-full sm:w-auto text-xs sm:text-sm p-2 sm:p-3 h-[36px] sm:h-[40px] order-2 sm:order-1"
               >
                 Cancel
               </Button>
               <Button
                 type="button"
                 onClick={addCustomSpec}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto text-xs sm:text-sm p-2 sm:p-3 h-[36px] sm:h-[40px] order-1 sm:order-2"
               >
                 Add Specification
               </Button>

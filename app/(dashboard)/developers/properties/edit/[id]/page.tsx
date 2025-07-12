@@ -363,12 +363,12 @@ export default function EditPropertyPage() {
         nearbyLandmark: data.nearbyLandmark,
         images: base64Images,
         videos: base64Videos,
-        price: Number.parseFloat(data.price.toString()) || 0,
+        price: (Number.parseFloat(data.price.toString()) || 0).toString(),
         propertyType: data.propertyType,
         minDownPaymentPercent:
-          Number.parseFloat(data.minDownPaymentPercent.toString()) || 0,
+          (Number.parseFloat(data.minDownPaymentPercent.toString()) || 0).toString(),
         minMonthlyPayment:
-          Number.parseFloat(data.minMonthlyPayment.toString()) || 0,
+          (Number.parseFloat(data.minMonthlyPayment.toString()) || 0).toString(),
         specifications,
         features,
       }
@@ -397,7 +397,7 @@ export default function EditPropertyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-[#F5F1EB] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">

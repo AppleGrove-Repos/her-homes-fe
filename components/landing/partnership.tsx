@@ -32,6 +32,7 @@ interface PartnershipFormData {
 }
 
 export function PartnershipContent() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     institutionName: '',
     contactPerson: '',
@@ -108,9 +109,17 @@ export function PartnershipContent() {
       email: formData.email.trim(),
       phoneNumber: formData.phoneNumber.trim(),
     }
-
+    setIsSubmitting(true)
     // Submit using mutation
-    partnershipMutation.mutate(submitData)
+    partnershipMutation.mutate(submitData, {
+      onSettled: () => setIsSubmitting(false),
+      // onSuccess: () => {
+      //   toast.success('Request submitted successfully')
+      // },
+      // onError: () => {
+      //   toast.error('Submission failed. Please try again')
+      // },
+    })
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -290,6 +299,7 @@ export function PartnershipContent() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-full h-12 bg-[#546B2F] hover:bg-green-800 text-white font-medium rounded-md flex items-center justify-center gap-2"
                 >
                   <Image
@@ -298,7 +308,7 @@ export function PartnershipContent() {
                     width={20}
                     height={20}
                   />
-                  Submit Request
+                  {isSubmitting ? 'Submitting...' : 'Submit Request'}
                 </Button>
               </div>
             </form>
@@ -326,15 +336,15 @@ export function PartnershipContent() {
                 className="text-left rounded-[10px] bg-white px-10 py-6 shadow-sm w-[400px] mx-auto"
               >
                 {/* <div className="w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-6 bg-blue-50"> */}
-                  <Image
-                    src={benefit.image}
-                    alt={benefit.title}
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
+                <Image
+                  src={benefit.image}
+                  alt={benefit.title}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
                 {/* </div> */}
-                <h3 className="text-xl font-semibold text-gray-900 mb-2 mt-4" >
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 mt-4">
                   {benefit.title}
                 </h3>
                 <p className="text-gray-600 text-[13px] leading-relaxed">
