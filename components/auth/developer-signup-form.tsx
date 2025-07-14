@@ -27,16 +27,12 @@ export default function DeveloperSignupForm() {
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wIAAgMBAp2jkwAAAABJRU5ErkJggg=='
 
   const [formData, setFormData] = useState<DeveloperSignupData>({
+    fullName: '',
     email: '',
     phoneNumber: '',
     password: '',
     role: 'developer',
     companyName: '',
-    companyLogo: defaultBase64Image,
-    companyDescription: '',
-    yearsOfExperience: '',
-    website: '',
-    portfolio: '',
   })
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -117,8 +113,8 @@ export default function DeveloperSignupForm() {
       return
     }
     if (
-      !formData.companyName ||
-      !formData.companyDescription ||
+      !formData.fullName ||
+      !formData.companyName||
       !formData.email ||
       !formData.password ||
       !formData.phoneNumber
@@ -143,7 +139,7 @@ export default function DeveloperSignupForm() {
   }
 
   return (
-    <div className='h-[400px]'>
+    <div className="h-[400px]">
       <p className="text-gray-600 mb-2 text-[14px]">
         Register as a developer to start listing your properties
       </p>
@@ -152,15 +148,15 @@ export default function DeveloperSignupForm() {
           <div className="text-red-500 text-sm text-center">{formError}</div>
         )}
         <div className="space-y-1">
-          <Label htmlFor="companyName">
+          <Label htmlFor="fullName">
             Full name<span className="text-red-500">*</span>
           </Label>
           <Input
-            id="companyName"
-            name="companyName"
-            value={formData.companyName || ''}
+            id="fullName"
+            name="fullName"
+            value={formData.fullName || ''}
             onChange={handleChange}
-            placeholder="Enter your company name/fullname"
+            placeholder="Enter your fullname"
             required
           />
         </div>
@@ -201,13 +197,13 @@ export default function DeveloperSignupForm() {
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="companyDescription">
+          <Label htmlFor="companyName">
             Company Name<span className="text-red-500">*</span>
           </Label>
           <Input
-            id="companyDescription"
-            name="companyDescription"
-            value={formData.companyDescription}
+            id="companyName"
+            name="companyName"
+            value={formData.companyName}
             onChange={handleChange}
             placeholder="Enter your company Name"
             required
@@ -263,7 +259,7 @@ export default function DeveloperSignupForm() {
           </div>
         </div>
         {formData.companyName &&
-          formData.companyDescription &&
+          formData.companyName &&
           formData.email &&
           formData.password &&
           formData.phoneNumber && (

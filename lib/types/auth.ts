@@ -1,14 +1,10 @@
 export interface DeveloperSignupData {
+  fullName: string
   email: string
   phoneNumber: string
   password: string
   role: 'developer'
   companyName: string
-  companyLogo: string
-  companyDescription: string
-  yearsOfExperience: string
-  website: string
-  portfolio: string
 }
 export type UserRole = 'applicant' | 'developer' | 'admin'
 
@@ -23,15 +19,10 @@ export interface ContactUsDto {
 
 export interface ApplicantSignupData {
   email: string
-  phoneNumber: string
   password: string
   role: 'applicant'
-  firstName: string
-  lastName: string
-  gender: 'male' | 'female' | 'other'
-  dateOfBirth: string
-  employmentStatus: string
-  location: string
+  termsAccepted: true
+  fullName: string
 }
 export type ResetPassword = {
   password: string

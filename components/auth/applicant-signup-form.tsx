@@ -36,15 +36,10 @@ export default function ApplicantSignupForm() {
 
   const [formData, setFormData] = useState<ApplicantSignupData>({
     email: '',
-    phoneNumber: '',
     password: '',
     role: 'applicant',
-    firstName: '',
-    lastName: '',
-    gender: 'male',
-    dateOfBirth: '',
-    employmentStatus: '',
-    location: '',
+    fullName: '',
+    termsAccepted: true,
   })
 
   const [day, setDay] = useState('')
@@ -121,7 +116,7 @@ export default function ApplicantSignupForm() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (step !== 3) return
+    setFormError(null)
 
     if (!agreedToTerms) {
       toast.error('You must agree to the Terms, Privacy Policy, and Fees')
@@ -130,14 +125,9 @@ export default function ApplicantSignupForm() {
 
     // Validate required fields
     if (
-      !formData.firstName.trim() ||
-      !formData.lastName.trim() ||
+      !formData.fullName.trim() ||
       !formData.email ||
-      !formData.password ||
-      !formData.phoneNumber ||
-      !formData.location ||
-      !formData.employmentStatus ||
-      !formData.dateOfBirth
+      !formData.password
     ) {
       toast.error('Please fill in all required fields')
        setFormError('Please fill in all required fields')
@@ -146,7 +136,10 @@ export default function ApplicantSignupForm() {
     console.log(formData)
 
     try {
-      await signupMutation.mutateAsync(formData)
+      await signupMutation.mutateAsync({
+        ...formData,
+        termsAccepted: true, 
+      })
     } catch (error: any) {
       const message =
         error?.response?.data?.error ||
@@ -169,13 +162,13 @@ export default function ApplicantSignupForm() {
           <div className="text-red-500 text-sm text-center">{formError}</div>
         )}
         <div className="space-y-1">
-          <Label htmlFor="firstName">
+          <Label htmlFor="fulName">
             Full name<span className="text-red-500">*</span>
           </Label>
           <Input
-            id="firstName"
-            name="firstName"
-            value={formData.firstName || ''}
+            id="fullName"
+            name="fullName"
+            value={formData.fullName || ''}
             onChange={handleChange}
             placeholder="Enter your fullname"
             required
@@ -244,7 +237,7 @@ export default function ApplicantSignupForm() {
             </button>
           </div>
         </div>
-        {formData.firstName &&
+        {formData.fullName &&
           formData.email &&
           formData.password &&
            (
