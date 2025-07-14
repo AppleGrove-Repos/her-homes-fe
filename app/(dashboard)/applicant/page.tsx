@@ -27,10 +27,10 @@ export default function ApplicantDashboard() {
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-[#64111F] to-[#C6203C] rounded-2xl p-8 mb-8 text-white">
         <h1 className="text-2xl font-bold mb-2">
-          Welcome back, {user?.name || 'User'}!
+          Welcome back, {user?.fullName || 'User'}!
         </h1>
         <p className="text-[#DBEAFE] mb-6">
-          {user?.name ? `${user.name.split(' ')[0]}, your` : 'Your'} home
+          {user?.fullName ? `${user.fullName.split(' ')[0]}, your` : 'Your'} home
           ownership journey is progressing well. Here's your latest update.
         </p>
 

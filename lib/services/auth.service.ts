@@ -23,7 +23,7 @@ export interface LoginType {
 
 export interface User {
   id: string
-  name: string
+  fullName: string
   email: string
   role: 'developer' | 'applicant' | string
   profilePicture?: string

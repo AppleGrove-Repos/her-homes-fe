@@ -62,7 +62,7 @@ export default function DeveloperDashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-[25px] font-bold mb-2">
-              Welcome back, {user?.name || 'Alex'}!
+              Welcome back, {user?.fullName || 'Alex'}!
             </h1>
             <p className="text-green-100 text-[15px]">
               Here's what's happening with your properties

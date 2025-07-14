@@ -77,14 +77,14 @@ export default function Header() {
               {user?.profilePicture ? (
                 <Image
                   src={user.profilePicture || '/placeholder.svg'}
-                  alt={user.name || 'User'}
+                  alt={user.fullName || 'User'}
                   width={32}
                   height={32}
                   className="rounded-full object-cover"
                 />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center text-white text-sm font-medium">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  {user?.fullName?.charAt(0).toUpperCase() || 'U'}
                 </div>
               )}
               <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -93,7 +93,7 @@ export default function Header() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                <p className="text-sm font-medium">{user?.fullName || 'User'}</p>
                 <p className="text-xs text-gray-500 truncate">
                   {user?.email || ''}
                 </p>

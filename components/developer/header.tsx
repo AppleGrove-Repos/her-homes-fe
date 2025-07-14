@@ -27,7 +27,7 @@ import { Input } from '@/components/ui/input'
 
 interface DeveloperHeaderProps {
   user: {
-    name: string
+    fullName: string
     email: string
     profilePicture?: string
   } | null
@@ -171,14 +171,14 @@ export function DeveloperHeader({ user }: DeveloperHeaderProps) {
                 {user?.profilePicture ? (
                   <Image
                     src={user.profilePicture || '/placeholder.svg'}
-                    alt={user.name || 'User'}
+                    alt={user.fullName || 'User'}
                     width={24}
                     height={24}
                     className="rounded-full object-cover"
                   />
                 ) : (
                   <div className="h-6 w-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-medium">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    {user?.fullName?.charAt(0).toUpperCase() || 'U'}
                   </div>
                 )}
                 <ChevronDown className="h-3 w-3 text-gray-400" />
@@ -187,7 +187,9 @@ export function DeveloperHeader({ user }: DeveloperHeaderProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <p className="text-sm font-medium">
+                    {user?.fullName || 'User'}
+                  </p>
                   <p className="text-xs text-gray-500 truncate">
                     {user?.email || ''}
                   </p>
@@ -334,19 +336,19 @@ export function DeveloperHeader({ user }: DeveloperHeaderProps) {
                   {user?.profilePicture ? (
                     <Image
                       src={user.profilePicture || '/placeholder.svg'}
-                      alt={user.name || 'User'}
+                      alt={user.fullName || 'User'}
                       width={32}
                       height={32}
                       className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-medium">
-                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                      {user?.fullName?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   )}
                   <div className="hidden lg:block text-left">
                     <div className="text-sm font-medium text-gray-900">
-                      {user?.name || 'User'}
+                      {user?.fullName || 'User'}
                     </div>
                     <div className="text-xs text-gray-500 max-w-[120px] truncate">
                       {user?.email || ''}
@@ -359,7 +361,9 @@ export function DeveloperHeader({ user }: DeveloperHeaderProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <p className="text-sm font-medium">
+                    {user?.fullName || 'User'}
+                  </p>
                   <p className="text-xs text-gray-500 truncate">
                     {user?.email || ''}
                   </p>

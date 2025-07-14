@@ -43,7 +43,7 @@ export interface PropertyCardProps {
 
 export interface User {
   _id: string
-  name: string
+  fullName: string
   email: string
   profilePicture?: string
   role: 'developer' | 'admin' | 'user'
