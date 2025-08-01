@@ -22,7 +22,7 @@ export default function ApplicantProfilePage() {
 
   // Form state
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    name: user?.fullName || '',
     email: user?.email || '',
   })
 
@@ -74,7 +74,7 @@ export default function ApplicantProfilePage() {
               {profileImageUrl || user?.profilePicture ? (
                 <Image
                   src={profileImageUrl || user?.profilePicture || ''}
-                  alt={user?.name || 'User'}
+                  alt={user?.fullName || 'User'}
                   fill
                   className="object-cover"
                 />
@@ -155,7 +155,7 @@ export default function ApplicantProfilePage() {
               ) : (
                 <div>
                   <h1 className="text-2xl font-bold mb-1">
-                    {user?.name || 'User Name'}
+                    {user?.fullName || 'User Name'}
                   </h1>
                   <p className="text-gray-500 mb-6">Applicant</p>
 
