@@ -33,7 +33,7 @@ export const useChangePassword = () => {
       newPassword: string
     }) => {
       try {
-        const response = await https.put('/user/change-password', {
+        const response = await https.put('/users/change-password', {
           oldPassword,
           newPassword,
         })
@@ -65,7 +65,7 @@ export const useUploadProfilePicture = () => {
       // Accepts a base64 string directly
       mutationFn: async (base64Image: string) => {
         try {
-          const response = await https.put('/user/profile-picture', {
+          const response = await https.put('/users/profile-picture', {
             picture: base64Image,
           })
           return response.data

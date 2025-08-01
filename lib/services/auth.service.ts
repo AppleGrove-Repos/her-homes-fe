@@ -12,10 +12,18 @@ export interface LoginType {
   email: string
   password: string
 }
+// export interface ContactUsDto {
+//   firstName: string
+//   lastName: string
+//   email: string
+//   message: string
+//   phoneNumber?: string
+//   inquiryReason: string
+// }
 
 export interface User {
   id: string
-  name: string
+  fullName: string
   email: string
   role: 'developer' | 'applicant' | string
   profilePicture?: string
@@ -36,7 +44,7 @@ export const logoutUser = () => {
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
     console.log('Fetching user data from:', `${API_URL}/user`)
-    const response = await https.get('/user') // Axios instance with cookies enabled
+    const response = await https.get('/users/profile-picture') // Axios instance with cookies enabled
     console.log('User data response:', response.data)
 
     return response.data.data
@@ -66,7 +74,7 @@ export const changePassword = async (data: {
       throw new Error('No authentication token found')
     }
 
-    const response = await axios.put(`${API_URL}/user/change-password`, data, {
+    const response = await axios.put(`${API_URL}/users/change-password`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -90,7 +98,7 @@ export const updateProfilePicture = async (formData: FormData) => {
     }
 
     const response = await axios.put(
-      `${API_URL}/user/profile-picture`,
+      `${API_URL}/users/profile-picture`,
       formData,
       {
         headers: {
@@ -161,7 +169,7 @@ export const fetchUser = async (): Promise<User> => {
   try {
     console.log('Fetching user data from:', `${API_URL}/user`)
 
-    const response = await axios.get(`${API_URL}/user`)
+    const response = await axios.get(`${API_URL}/users/profile`)
 
     console.log('User data response received:', response.status)
 
@@ -287,13 +295,55 @@ export const verifyResetToken = async (
     throw new Error(errorMessage)
   }
 }
+export interface ContactUsDto {
+  firstName: string
+  lastName: string
+  email: string
+  message: string
+  phoneNumber: string
+  inquiryReason: string
+}
+export interface RequestPartnershipDto {
+  institutionName: string
+  fullName: string
+  role: string
+  email: string
+  phoneNumber: string
+}
 
 export interface ResetPasswordParams {
   email: string
   token: string
   password: string
 }
+export const contactUS = async (data: ContactUsDto) => {
+  try {
+    console.log('Sending payload:', data)
+    const response = await https.post('/contact-us', data)
 
+    toast.success('Message sent successfully')
+    return response.data.data
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || 'Failed to send message'
+    toast.error(errorMessage)
+    throw new Error(errorMessage)
+  }
+}
+export const RequestPartnership = async (data: RequestPartnershipDto) => {
+  try {
+    console.log('Sending payload:', data)
+    const response = await https.post('/partnership', data)
+
+    toast.success('Message sent successfully')
+    return response.data.data
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || 'Failed to send message'
+    toast.error(errorMessage)
+    throw new Error(errorMessage)
+  }
+}
 export const resetPassword = async (
   params: ResetPasswordParams
 ): Promise<void> => {

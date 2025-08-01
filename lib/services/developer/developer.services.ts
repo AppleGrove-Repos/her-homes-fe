@@ -14,26 +14,36 @@ export interface Property {
   // images: string[] 
   // videos: string[]
   location: string
-  price: number
+  price: string
   propertyType: string
-  minDownPaymentPercent: number
-  minMonthlyPayment: number
+  minDownPaymentPercent: string
+  minMonthlyPayment: string
   status: 'pending' | 'approved' | 'rejected'
   createdAt: string
   updatedAt: string
 }
 
 export interface CreatePropertyDto {
-  name: string
-  description: string
-  bedrooms: string
+  title: string
+  propertyDescription: string
+  neighborhoodDescription: string
+  propertyAddress: string
+  nearbyLandmark: string
   images: string[]
   videos: string[]
-  location: string
   price: string
   propertyType: string
   minDownPaymentPercent: string
   minMonthlyPayment: string
+  specifications: {
+    bedrooms: number
+    area: number
+    floor: number
+  }
+  features: {
+    gym: boolean
+    pool: boolean
+  }
 }
 
 export interface SearchProperties {
@@ -55,7 +65,9 @@ export const getProperties = async (query?: SearchProperties) => {
           .join('&')
       : ''
 
-    const endpoint = `/listing/developer${queryString ? `?${queryString}` : ''}`
+    const endpoint = `/properties/developer${
+      queryString ? `?${queryString}` : ''
+    }`
     const response = await https.get(`${API_URL}${endpoint}`,)
 
     return response.data.data
@@ -73,7 +85,7 @@ export const getPropertyById = async (propertyId: string) => {
     const token = localStorage.getItem('auth_token')
     if (!token) throw new Error('Authentication required')
 
-    const response = await https.get(`${API_URL}/listing/${propertyId}`)
+    const response = await https.get(`${API_URL}/properties/${propertyId}`)
 
     return response.data.data
   } catch (error: any) {
@@ -88,7 +100,7 @@ export const getPropertyById = async (propertyId: string) => {
 export const createProperty = async (data: CreatePropertyDto) => {
   try {
     console.log('Sending payload:', data)
-    const response = await https.post('/listing', data)
+    const response = await https.post('/properties', data)
 
     toast.success('Property created successfully')
     return response.data.data
@@ -108,7 +120,7 @@ export const updateProperty = async (
    
 
     const response = await https.patch(
-      `${API_URL}/listing/${propertyId}`,
+      `${API_URL}/properties/${propertyId}`,
       data,
     )
 
@@ -125,16 +137,14 @@ export const updateProperty = async (
 // Delete a property
 export const deleteProperty = async (propertyId: string) => {
   try {
-   
-
-    await https.delete(`${API_URL}/listing/${propertyId}`,)
-
-    toast.success('Property deleted successfully')
+    console.log('Deleting property with ID:', propertyId)
+    const response = await https.delete(`${API_URL}/properties/${propertyId}`)
+    console.log('Delete response:', response)
     return true
   } catch (error: any) {
+    console.error('Delete property error:', error)
     const errorMessage =
       error.response?.data?.message || 'Failed to delete property'
-    toast.error(errorMessage)
-    return false
+    throw new Error(errorMessage)
   }
 }

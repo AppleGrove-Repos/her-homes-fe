@@ -1,28 +1,28 @@
 export interface DeveloperSignupData {
+  fullName: string
   email: string
   phoneNumber: string
   password: string
   role: 'developer'
   companyName: string
-  companyLogo: string
-  companyDescription: string
-  yearsOfExperience: string
-  website: string
-  portfolio: string
 }
 export type UserRole = 'applicant' | 'developer' | 'admin'
 
-export interface ApplicantSignupData {
-  email: string
-  phoneNumber: string
-  password: string
-  role: 'applicant'
+export interface ContactUsDto {
   firstName: string
   lastName: string
-  gender: 'male' | 'female' | 'other'
-  dateOfBirth: string
-  employmentStatus: string
-  location: string
+  email: string
+  phone?: string
+  reason: string
+  message: string
+}
+
+export interface ApplicantSignupData {
+  email: string
+  password: string
+  role: 'applicant'
+  termsAccepted: true
+  fullName: string
 }
 export type ResetPassword = {
   password: string

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/store/auth.store'
+import { getFeatureIcon, getSpecificationIcon, formatTextForDisplay } from '@/lib/utils/icon-utils'
 
 interface PropertyCardProps {
   id: string
@@ -120,7 +121,7 @@ export default function PropertyCard({
       <div>
         {/* Title and Rating */}
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-lg">{name}</h3>
+          <h3 className="font-bold text-lg">{name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}</h3>
           <div className="flex items-center">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="text-sm ml-1">{rating}</span>
@@ -128,7 +129,7 @@ export default function PropertyCard({
         </div>
 
         {/* Location */}
-        <p className="text-gray-600 text-sm mb-3">{location}</p>
+        <p className="text-gray-600 text-sm mb-3">{location.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}</p>
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-4">

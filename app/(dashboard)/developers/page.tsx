@@ -8,10 +8,15 @@ import {
   FileText,
   MessageSquare,
   Eye,
+  Home,
   TrendingUp,
   Users,
-  Calendar,
-  ArrowRight,
+  Plus,
+  Search,
+  Upload,
+  Bell,
+  Heart,
+  PiggyBank,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
@@ -21,8 +26,6 @@ export default function DeveloperDashboard() {
   const { user } = useAuth()
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
-
-  console.log('User object:', user)
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -43,8 +46,8 @@ export default function DeveloperDashboard() {
     return (
       <div className="flex items-center justify-center h-full p-8">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 rounded-full bg-[#FF9A8B] mb-4"></div>
-          <p className="text-[#7C0A02] font-medium">
+          <div className="h-12 w-12 rounded-full bg-green-500 mb-4"></div>
+          <p className="text-green-700 font-medium">
             Loading your dashboard...
           </p>
         </div>
@@ -53,238 +56,271 @@ export default function DeveloperDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFF0ED] to-white px-4 py-6 md:px-6 lg:px-8 space-y-6">
-      <div className="bg-white rounded-xl p-6 border border-[#FFE4E0] shadow-sm">
+    <div className="min-h-screen bg-[#F5F1EB] p-6 space-y-6">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-[#546B2F] to-[#8CB34F] rounded-2xl p-8 text-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#333333]">
-              Welcome back, <span className="text-[#7C0A02]">{user?.name}</span>
+            <h1 className="text-[25px] font-bold mb-2">
+              Welcome back, {user?.fullName || 'Alex'}!
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-green-100 text-[15px]">
               Here's what's happening with your properties
             </p>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-500">Today is</span>
-            <span className="font-medium bg-[#FFF0ED] text-[#7C0A02] px-3 py-1 rounded-full">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-              })}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 h-[100px]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm mb-1">Active listings</p>
+                <div className="text-[20px] font-bold">20</div>
+              </div>
+              {/* <div className="p-3 bg-white/20 rounded-full"> */}
+              <Home className="h-8 w-8" fill="white" stroke="#fffff" />
+              {/* </div> */}
+            </div>
+          </div>
+
+          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 h-[100px]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm mb-1">Income Generated</p>
+                <div className="text-[20px] font-bold inline">₦2.5M</div>
+                <p className="text-green-200 text-[20px] inline">/ ₦5M</p>
+              </div>
+              {/* <div className="p-3 bg-white/20 rounded-full"> */}
+              <PiggyBank className="h-8 w-8" fill="white" stroke="#fffff" />
+              {/* </div> */}
+            </div>
+          </div>
+
+          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 h-[100px]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm mb-1">Properties Sold</p>
+                <div className="text-[20px] font-bold">12</div>
+              </div>
+              {/* <div className="p-3 bg-white/20 rounded-full"> */}
+              <Heart className="h-8 w-8" fill="white" stroke="#fffff" />
+              {/* </div> */}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <Card className="p-6 bg-transparent border-none shadow-none">
+        <h2 className="text-xl font-semibold mb-6 text-gray-800">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Link
+            href="/developers/properties/add"
+            className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all duration-200 group"
+          >
+            {/* <div className="p-3 bg-green-100 rounded-full mb-3 group-hover:bg-green-200"> */}
+            <Building className="h-8 w-8 text-[#546B2F] mb-3" />
+            {/* </div> */}
+            <span className="text-center text-gray-700 font-medium">
+              Add Property
             </span>
-          </div>
-        </div>
-      </div>
+          </Link>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6 border border-[#FFE4E0] shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500 mb-1">Active Listings</p>
-              <div className="text-3xl font-bold text-[#333333]">20</div>
-              <p className="text-xs text-green-600 mt-2 flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1" /> +2 this month
-              </p>
-            </div>
-            <div className="p-3 bg-[#FFF0ED] rounded-full">
-              <Building className="h-6 w-6 text-[#7C0A02]" />
-            </div>
-          </div>
-        </Card>
+          <Link
+            href="/developers/listing"
+            className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all duration-200 group"
+          >
+            {/* <div className="p-3 bg-green-100 rounded-full mb-3 group-hover:bg-green-200"> */}
+            <Search className="h-8 w-8 text-[#546B2F] mb-3" />
+            {/* </div> */}
+            <span className="text-center text-gray-700 font-medium">
+              View Listings
+            </span>
+          </Link>
 
-        <Card className="p-6 border border-[#FFE4E0] shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500 mb-1">Applications</p>
-              <div className="text-3xl font-bold text-[#333333]">15</div>
-              <p className="text-xs text-green-600 mt-2 flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1" /> +5 this week
-              </p>
-            </div>
-            <div className="p-3 bg-[#FFF0ED] rounded-full">
-              <FileText className="h-6 w-6 text-[#7C0A02]" />
-            </div>
-          </div>
-        </Card>
+          <Link
+            href="/developers/messages"
+            className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all duration-200 group"
+          >
+            {/* <div className="p-3 bg-green-100 rounded-full mb-3 group-hover:bg-green-200"> */}
+            <MessageSquare className="h-8 w-8 text-[#546B2F] mb-3" />
+            {/* </div> */}
+            <span className="text-center text-gray-700 font-medium">
+              Unread Messages
+            </span>
+          </Link>
 
-        <Card className="p-6 border border-[#FFE4E0] shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500 mb-1">Unread Messages</p>
-              <div className="text-3xl font-bold text-[#333333]">7</div>
-              <p className="text-xs text-yellow-600 mt-2 flex items-center">
-                <Users className="h-3 w-3 mr-1" /> From 3 applicants
-              </p>
-            </div>
-            <div className="p-3 bg-[#FFF0ED] rounded-full">
-              <MessageSquare className="h-6 w-6 text-[#7C0A02]" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 border border-[#FFE4E0] shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500 mb-1">Property Views</p>
-              <div className="text-3xl font-bold text-[#333333]">1,254</div>
-              <p className="text-xs text-green-600 mt-2 flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1" /> +12% this week
-              </p>
-            </div>
-            <div className="p-3 bg-[#FFF0ED] rounded-full">
-              <Eye className="h-6 w-6 text-[#7C0A02]" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <Card className="p-6 border border-[#FFE4E0] shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <h2 className="text-xl font-bold text-[#333333] flex items-center">
-            <span className="inline-block w-1.5 h-6 bg-[#FF9A8B] mr-2 rounded-full"></span>
-            Property Performance
-          </h2>
-          <div className="flex items-center gap-2 mt-2 md:mt-0">
-            <button className="text-sm px-3 py-1 rounded-full bg-[#FFF0ED] text-[#7C0A02] font-medium">
-              Weekly
-            </button>
-            <button className="text-sm px-3 py-1 rounded-full text-gray-500 hover:bg-gray-100">
-              Monthly
-            </button>
-            <button className="text-sm px-3 py-1 rounded-full text-gray-500 hover:bg-gray-100">
-              Yearly
-            </button>
-          </div>
-        </div>
-        <div className="aspect-[3/1] bg-white rounded-md border border-[#FFE4E0] flex items-center justify-center p-4">
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <Image
-              src="/placeholder.svg?height=200&width=600"
-              alt="Performance Chart"
-              width={600}
-              height={200}
-              className="opacity-70"
-            />
-            <p className="text-gray-500 mt-4">
-              Performance data is being processed. Check back soon for insights.
-            </p>
-          </div>
+          <Link
+            href="/developers/documents"
+            className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all duration-200 group"
+          >
+            {/* <div className="p-3 bg-green-100 rounded-full mb-3 group-hover:bg-green-200"> */}
+            <FileText className="h-8 w-8 text-[#546B2F] mb-3" />
+            {/* </div> */}
+            <span className="text-center text-gray-700 font-medium">
+              Upload Documents
+            </span>
+          </Link>
         </div>
       </Card>
 
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6 border border-[#FFE4E0] shadow-sm">
+        {/* Mortgage Application Volume */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            Mortgage Application Volume
+          </h3>
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <TrendingUp className="h-12 w-12 text-green-500 mx-auto mb-2" />
+              <p className="text-gray-500">
+                Chart visualization would appear here
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* User Type Breakdown */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            User Type Breakdown
+          </h3>
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <Users className="h-12 w-12 text-green-500 mx-auto mb-2" />
+              <p className="text-gray-500">Pie chart would appear here</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Saved Properties */}
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[#333333] flex items-center">
-              <span className="inline-block w-1.5 h-6 bg-[#FF9A8B] mr-2 rounded-full"></span>
-              Recent Activity
-            </h2>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Saved Properties
+            </h3>
             <Link
-              href="/dashboard/developer/notifications"
-              className="text-sm text-[#7C0A02] hover:underline flex items-center"
+              href="/developers/saved"
+              className="text-green-600 hover:text-green-700 text-sm font-medium"
             >
-              View all <ArrowRight className="h-3 w-3 ml-1" />
+              View All
             </Link>
           </div>
           <div className="space-y-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#FFF0ED] transition-colors">
-              <div className="mt-1 h-2 w-2 rounded-full bg-[#7C0A02]"></div>
+            <div className="flex gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <Image
+                src="/placeholder.svg?height=80&width=120"
+                alt="Property"
+                width={120}
+                height={80}
+                className="rounded-lg object-cover"
+              />
               <div className="flex-1">
-                <p className="text-gray-800">
-                  New application received for 123 Main Street
+                <h4 className="font-medium text-gray-800">Luxury Apartment</h4>
+                <p className="text-sm text-gray-600">Victoria Island, Lagos</p>
+                <p className="text-lg font-semibold text-green-600 mt-1">
+                  ₦45,000,000
                 </p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-sm text-gray-500 flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" /> 2 hours ago
-                  </p>
-                  <button className="text-xs text-[#7C0A02] hover:underline">
-                    View
-                  </button>
-                </div>
+                <p className="text-xs text-gray-500">
+                  3 beds • 2 baths • 120 sqm
+                </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#FFF0ED] transition-colors">
-              <div className="mt-1 h-2 w-2 rounded-full bg-[#7C0A02]"></div>
+            <div className="flex gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <Image
+                src="/placeholder.svg?height=80&width=120"
+                alt="Property"
+                width={120}
+                height={80}
+                className="rounded-lg object-cover"
+              />
               <div className="flex-1">
-                <p className="text-gray-800">
-                  Property listing updated: 456 Park Avenue
+                <h4 className="font-medium text-gray-800">Modern Duplex</h4>
+                <p className="text-sm text-gray-600">Gwarinpa, Abuja</p>
+                <p className="text-lg font-semibold text-green-600 mt-1">
+                  ₦38,000,000
                 </p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-sm text-gray-500 flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" /> 4 hours ago
-                  </p>
-                  <button className="text-xs text-[#7C0A02] hover:underline">
-                    View
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#FFF0ED] transition-colors">
-              <div className="mt-1 h-2 w-2 rounded-full bg-[#7C0A02]"></div>
-              <div className="flex-1">
-                <p className="text-gray-800">
-                  New message from potential buyer
+                <p className="text-xs text-gray-500">
+                  4 beds • 3 baths • 200 sqm
                 </p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-sm text-gray-500 flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" /> 5 hours ago
-                  </p>
-                  <button className="text-xs text-[#7C0A02] hover:underline">
-                    View
-                  </button>
-                </div>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6 border border-[#FFE4E0] shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[#333333] flex items-center">
-              <span className="inline-block w-1.5 h-6 bg-[#FF9A8B] mr-2 rounded-full"></span>
-              Quick Actions
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Link
-              href="/developers/properties/add"
-              className="flex flex-col items-center justify-center p-4 border border-[#FFE4E0] rounded-lg hover:bg-[#FFF0ED] hover:shadow-sm transition-all duration-200"
-            >
-              <Building className="h-8 w-8 mb-2 text-[#7C0A02]" />
-              <span className="text-center text-gray-800 font-medium">
-                Add Property
-              </span>
-            </Link>
-            <Link
-              href="/developers/applications"
-              className="flex flex-col items-center justify-center p-4 border border-[#FFE4E0] rounded-lg hover:bg-[#FFF0ED] hover:shadow-sm transition-all duration-200"
-            >
-              <FileText className="h-8 w-8 mb-2 text-[#7C0A02]" />
-              <span className="text-center text-gray-800 font-medium">
-                View Applications
-              </span>
-            </Link>
-            <Link
-              href="/developers/messages"
-              className="flex flex-col items-center justify-center p-4 border border-[#FFE4E0] rounded-lg hover:bg-[#FFF0ED] hover:shadow-sm transition-all duration-200"
-            >
-              <MessageSquare className="h-8 w-8 mb-2 text-[#7C0A02]" />
-              <span className="text-center text-gray-800 font-medium">
-                Send Message
-              </span>
-            </Link>
-            <Link
-              href="/developers/settings"
-              className="flex flex-col items-center justify-center p-4 border border-[#FFE4E0] rounded-lg hover:bg-[#FFF0ED] hover:shadow-sm transition-all duration-200"
-            >
-              <Eye className="h-8 w-8 mb-2 text-[#7C0A02]" />
-              <span className="text-center text-gray-800 font-medium">
-                View Reports
-              </span>
-            </Link>
-          </div>
-        </Card>
+        {/* Recent Applications & Pending Verifications */}
+        <div className="space-y-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Recent Applications
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-medium text-green-600">SJ</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Sarah Johnson</p>
+                  <p className="text-xs text-gray-500">2 bedroom apartment</p>
+                </div>
+                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                  Pending
+                </span>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-medium text-green-600">MC</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Michael Chen</p>
+                  <p className="text-xs text-gray-500">3 bedroom house</p>
+                </div>
+                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                  Approved
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Pending Verifications
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-4 w-4 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-medium">ID Verification</p>
+                    <p className="text-xs text-gray-500">James Wilson</p>
+                  </div>
+                </div>
+                <button className="text-blue-600 text-xs hover:underline">
+                  Review
+                </button>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="text-sm font-medium">Address Proof</p>
+                    <p className="text-xs text-gray-500">BuildCorp Ltd.</p>
+                  </div>
+                </div>
+                <button className="text-blue-600 text-xs hover:underline">
+                  Review
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   )

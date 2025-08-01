@@ -19,8 +19,8 @@ export default function MobileMenu() {
   const partnerLinks = [
     { text: 'Communities', href: '/partners/banks' },
     { text: 'Mortgage Institutions', href: '/partners/developers' },
-    { text: 'Real Estate Agents', href: '/partners/agents' },
-    { text: 'Become a Partner', href: '/partners/join' },
+    { text: 'Real Estate Agents', href: '/developers' },
+    { text: 'Become a Partner', href: '/partnership' },
   ]
 
   const overlayVariants = {

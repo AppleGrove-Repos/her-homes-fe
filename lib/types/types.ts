@@ -1,14 +1,4 @@
 // Shared types for the application
-export interface Property {
-  id: string
-  propertyType: string
-  location: string
-  price: number
-  minMonthlyPayment: number
-  rating: number
-  images: string[]
-  tags?: string[] // option
-}
 export interface ApiResponse<T, M = undefined> {
   success: boolean
   message: string
@@ -53,7 +43,7 @@ export interface PropertyCardProps {
 
 export interface User {
   _id: string
-  name: string
+  fullName: string
   email: string
   profilePicture?: string
   role: 'developer' | 'admin' | 'user'
@@ -78,20 +68,32 @@ export interface Notification {
   createdAt: string
 }
 
-// Renamed to match the schema exactly
+// Updated to match the new backend schema
 export interface Property {
   _id: string
-  name: string
-  description: string
-  bedrooms: number
-  location: string
+  id?: string
+  title: string
+  name?: string // Keep for backward compatibility
+  propertyDescription?: string
+  description?: string // Keep for backward compatibility
+  neighborhoodDescription?: string
+  propertyAddress: string
+  location?: string // Keep for backward compatibility
+  nearbyLandmark?: string
   price: number
   propertyType: string
   minDownPaymentPercent: number
   minMonthlyPayment: number
-  status: 'pending' | 'approved' | 'rejected'
-  createdAt: string
-  updatedAt: string
+  specifications?: Record<string, string | number>
+  bedrooms?: number // Keep for backward compatibility
+  images: string[]
+  videos: string[]
+  features?: Record<string, boolean>
+  rating?: number
+  tags?: string[]
+  status?: 'pending' | 'approved' | 'rejected'
+  createdAt?: string
+  updatedAt?: string
 }
 
 // Renamed to match the schema exactly

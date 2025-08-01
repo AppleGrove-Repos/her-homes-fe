@@ -48,9 +48,9 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden md:ml-0 ml-[-30px] overflow-x-hidden">
       <motion.div
-        className="flex-1 p-8 w-full lg:w-[55%] md:p-12 lg:p-16 flex flex-col overflow-y-auto px-6 py-10"
+        className="flex-1 p-10 w-full lg:w-[55%] md:p-12 lg:p-16 flex flex-col overflow-y-auto px-8  py-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}

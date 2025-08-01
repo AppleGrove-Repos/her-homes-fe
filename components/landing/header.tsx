@@ -52,7 +52,7 @@ export default function Header() {
      animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
    }
   return (
-    <header className="relative w-full py-3 px-4 md:px-6 lg:px-8 mb-10 bg-[#ffffff] shadow-lg  ">
+    <header className="relative w-full md:py-3 py-[-20px] px-4 md:px-6 lg:px-8 mb-10 bg-[#ffffff] shadow-lg  ">
       <div className="absolute top-[600px] -right-[100px] w-[400px] h-72 z-0 pointer-events-none filter blur-md">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -79,9 +79,9 @@ export default function Header() {
             <Image
               src="/assets/images/header-logo.png"
               alt="footer-logo"
-              width={100}
-              height={100}
-              className="h-10 w-auto object-contain align-middle"
+              width={10}
+              height={10}
+              className="h-8 w-auto object-contain align-middle"
             />
           </div>
           <span className="text-base font-medium hidden sm:block">
@@ -124,8 +124,8 @@ export default function Header() {
                   {[
                     { label: 'Communities', href: '/partners/banks' },
                     { label: 'Mortgage Institutions', href: '/partners/developers' },
-                    { label: 'Real Estate Agents', href: '/partners/agents' },
-                    { label: 'Become a Partner', href: '/partners/join' },
+                    { label: 'Real Estate Agents', href: '/signup' },
+                    { label: 'Become a Partner', href: '/partnership' },
                   ].map((item, index) => (
                     <motion.div key={index} variants={itemVariants}>
                       <Link

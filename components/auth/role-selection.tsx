@@ -10,12 +10,14 @@ interface RoleSelectionProps {
   selectedRole: UserRole | null
   onRoleSelect: (role: UserRole) => void
   onContinue: () => void
+  onBack?: () => void // Add this line
 }
 
 export default function RoleSelection({
   selectedRole,
   onRoleSelect,
   onContinue,
+  onBack, // Add this line
 }: RoleSelectionProps) {
   const roleVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -42,8 +44,35 @@ export default function RoleSelection({
         },
       }}
     >
+      {/* Back Button */}
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-4 flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+        >
+          <svg
+            className="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back
+        </button>
+      )}
+
       <div>
-        <motion.h2 className="text-lg font-medium mb-4" variants={roleVariants}>
+        <motion.h2
+          className="text-[15px] font-medium mb-4"
+          variants={roleVariants}
+        >
           Choose Your Role
         </motion.h2>
 
@@ -151,7 +180,16 @@ export default function RoleSelection({
       >
         Continue
       </motion.button>
-        {/* <p className="mt-8 text-center text-sm text-gray-600">
+      <div className="text-left text-gray-400/70 text-sm mt-2">
+        Already have an account?{' '}
+        <Link
+          href="/login"
+          className="text-[#546B2F] font-bold hover:underline"
+        >
+          Sign in
+        </Link>
+      </div>
+      {/* <p className="mt-8 text-center text-sm text-gray-600">
                      Have an account?{' '}
                     <Link
                       href="/login"

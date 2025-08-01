@@ -1,45 +1,45 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
-import { Suspense } from 'react'
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useFilterState, FilterProvider } from '@/lib/hooks/use-filter-taste'
-import PropertyCard from '@/components/applicants/PropertyCard'
-import Header from '@/components/landing/header'
-import Footer from '@/components/landing/footer'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Search, Loader2, X, Filter } from 'lucide-react'
+import { Suspense, useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '@/lib/store/auth.store'
-import { AuthProvider } from '@/lib/store/auth-provider'
 import {
-  useGetPropertyListings,
-  type PropertyFilterParams,
-} from '@/lib/hooks/usePropertyApi'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+  Search,
+  Loader2,
+  X,
+  Filter,
+  Bell,
+  User,
+  LogOut,
+  Settings,
+  ChevronDown,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useAuth } from '@/lib/store/auth.store'
+import ApplicantPropertyCard from '@/components/applicants/applicant-property-card'
 import LoadingSpinner from '@/components/loading-spinner'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useGetUserListings, Property } from '@/lib/hooks/usePropertyApi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import Footer from '@/components/landing/footer'
 
 // Create a client
 const queryClient = new QueryClient()
 
-// Wrapper component with QueryClientProvider'
-
-export default function ListingsPage() {
+// Wrapper component with QueryClientProvider
+export default function ApplicantDashboardPage() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <Suspense fallback={<LoadingSpinner />}>
-          <FilterProvider>
-            <ListingsContent />
-          </FilterProvider>
-        </Suspense>
-      </QueryClientProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<LoadingSpinner />}>
+        <ApplicantDashboard />
+      </Suspense>
+    </QueryClientProvider>
   )
 }
+
+// Price filter options
 enum PriceFilter {
   UNDER_10M = '0m-10m',
   BETWEEN_10M_25M = '10m-25m',
@@ -56,37 +56,19 @@ const priceOptions = [
   { label: 'Above N100M', value: PriceFilter.ABOVE_100M },
 ]
 
-// Debounce function to limit API calls
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
-
-  return debouncedValue
-}
-
-function ListingsContent() {
-  const { filters, setFilter, resetFilters } = useFilterState()
+function ApplicantDashboard() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [totalResults, setTotalResults] = useState(0)
-  const { isAuthenticated } = useAuth()
+  const { user, logout } = useAuth()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(9)
+  
   const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearchQuery = useDebounce(searchQuery, 500) // 500ms debounce
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [totalResults, setTotalResults] = useState(0)
 
+  console.log('User object:', user) 
   // Local state for filter UI values
-  const [localFilters, setLocalFilters] = useState({
+  const [filters, setFilters] = useState({
     propertyType: '',
     priceRange: '',
     bedrooms: '',
@@ -94,221 +76,100 @@ function ListingsContent() {
     moreFilters: '',
   })
 
-  // Build filter params for API
-  const [filterParams, setFilterParams] = useState<PropertyFilterParams>({})
-
-  const houseImages = [
-    '/assets/images/listingBG-1.png',
-    '/assets/images/listingBG-2.png',
-    '/assets/images/listingBG-3.png',
-    '/assets/images/listingBG-4.png',
-  ]
-  const [[page, direction], setPage] = useState([0, 0])
-
-  // Use React Query to fetch property listings
-  const { data: propertyResponse, isLoading } =
-    useGetPropertyListings(filterParams)
-  const properties = propertyResponse?.data || []
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newPage = (page + 1) % houseImages.length
-      setPage([newPage, 1])
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [page, houseImages.length])
-
-  // Initialize search query from URL params
-  useEffect(() => {
-    const urlSearchQuery = searchParams.get('searchQuery')
-    if (urlSearchQuery) {
-      setSearchQuery(urlSearchQuery)
-    }
-
-    // Initialize local filters from URL params
-    setLocalFilters({
-      propertyType: searchParams.get('propertyType') || '',
-      priceRange: searchParams.get('priceRange') || '',
-      bedrooms: searchParams.get('bedrooms') || '',
-      location: searchParams.get('location') || '',
-      moreFilters: searchParams.get('moreFilters') || '',
+  // Fetch user listings
+  const { data: userListingsResponse, isLoading: listingsLoading } =
+    useGetUserListings({
+      page: currentPage,
+      limit: itemsPerPage,
+      search: searchQuery,
+      propertyType: filters.propertyType,
+      priceRange: filters.priceRange,
+      bedrooms: filters.bedrooms,
+      location: filters.location,
+      moreFilters: filters.moreFilters,
     })
-  }, [searchParams])
 
-  // Function to update URL query params when filters change
-  const applyFilters = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    // Use local filter values for the URL
-    if (localFilters.propertyType)
-      params.set('propertyType', localFilters.propertyType)
-    else params.delete('propertyType')
-
-    if (localFilters.priceRange)
-      params.set('priceRange', localFilters.priceRange)
-    else params.delete('priceRange')
-
-    if (localFilters.bedrooms) params.set('bedrooms', localFilters.bedrooms)
-    else params.delete('bedrooms')
-
-    if (localFilters.location) params.set('location', localFilters.location)
-    else params.delete('location')
-
-    if (localFilters.moreFilters)
-      params.set('moreFilters', localFilters.moreFilters)
-    else params.delete('moreFilters')
-
-    if (searchQuery) params.set('searchQuery', searchQuery)
-    else params.delete('searchQuery')
-
-    // Update the URL with filters
-    router.push(`/listings?${params.toString()}`)
-
-    // Update filter params for API
-    const apiFilters: PropertyFilterParams = {}
-    if (localFilters.propertyType)
-      apiFilters.propertyType = localFilters.propertyType
-    if (localFilters.priceRange) apiFilters.priceRange = localFilters.priceRange
-    if (localFilters.bedrooms) apiFilters.bedrooms = localFilters.bedrooms
-    if (localFilters.location) apiFilters.location = localFilters.location
-    if (localFilters.moreFilters)
-      apiFilters.moreFilters = localFilters.moreFilters
-    if (searchQuery) apiFilters.search = searchQuery
-
-    apiFilters.limit = 34
-    setFilterParams(apiFilters)
-
-    // Hide mobile filters after applying
-    setShowMobileFilters(false)
-  }, [localFilters, router, searchParams, searchQuery])
-
-  // Apply live search when debounced search query changes
-  useEffect(() => {
-    if (debouncedSearchQuery !== undefined) {
-      const params = new URLSearchParams(searchParams.toString())
-
-      if (debouncedSearchQuery) {
-        params.set('searchQuery', debouncedSearchQuery)
-      } else {
-        params.delete('searchQuery')
-      }
-
-      router.push(`/listings?${params.toString()}`)
-
-      // Update filter params for API
-      setFilterParams((prev) => ({
-        ...prev,
-        search: debouncedSearchQuery || undefined,
-      }))
-    }
-  }, [debouncedSearchQuery, router, searchParams])
+  const properties = userListingsResponse?.data || []
 
   // Update total results when data changes
   useEffect(() => {
-    if (propertyResponse) {
-      setTotalResults(propertyResponse.total || properties.length || 0)
+    if (userListingsResponse) {
+      setTotalResults(userListingsResponse.total || properties.length || 0)
     }
-  }, [propertyResponse, properties.length])
+  }, [userListingsResponse, properties.length])
 
-  // Initial load of filters from URL
-  useEffect(() => {
-    const apiFilters: PropertyFilterParams = {}
-    if (searchParams.get('propertyType'))
-      apiFilters.propertyType = searchParams.get('propertyType')!
-    if (searchParams.get('priceRange'))
-      apiFilters.priceRange = searchParams.get('priceRange')!
-    if (searchParams.get('bedrooms'))
-      apiFilters.bedrooms = searchParams.get('bedrooms')!
-    if (searchParams.get('location'))
-      apiFilters.location = searchParams.get('location')!
-    if (searchParams.get('searchQuery'))
-      apiFilters.search = searchParams.get('searchQuery')!
-    if (searchParams.get('moreFilters'))
-      apiFilters.moreFilters = searchParams.get('moreFilters')!
+  // Calculate total pages
+  const totalPages = Math.ceil(totalResults / itemsPerPage)
 
-    apiFilters.limit = 34
-    setFilterParams(apiFilters)
-  }, [searchParams])
-
-  const handleViewMore = () => {
-    if (!isAuthenticated) {
-      router.push(`/login?redirect=/listings&action=view-more`)
-    } else {
-      router.push('/listings')
+  // Handle pagination
+  const handlePageChange = (newPage: number): void => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage)
     }
   }
-  const handlePropertyClick = (propertyId: string) => {
-    if (!isAuthenticated) {
-      // Use the same path format as in PropertyCard for consistency
-      router.push(
-        `/listings/${propertyId}`
-      )
-    } else {
-      // Update this path to match as well
-      router.push(`/applicant/listing/${propertyId}`)
-    }
-  }
-  const clearSearch = () => {
-    setSearchQuery('')
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete('searchQuery')
-    router.push(`/listings?${params.toString()}`)
 
-    // Update filter params for API
-    setFilterParams((prev) => {
-      const newFilters = { ...prev }
-      delete newFilters.search
-      return newFilters
-    })
+  // Handle property click
+  const handlePropertyClick = (propertyId: string): void => {
+    router.push(`/applicant/listing/${propertyId}`)
   }
 
+
+
+  // Apply filters
+  const applyFilters = () => {
+    // The filters are already applied via the useGetUserListings hook
+    setShowMobileFilters(false)
+  }
+
+  // Clear all filters
   const clearAllFilters = () => {
-    // Reset local filters
-    setLocalFilters({
+    setFilters({
       propertyType: '',
       priceRange: '',
       bedrooms: '',
       location: '',
       moreFilters: '',
     })
-
-    // Reset search query
     setSearchQuery('')
-
-    // Reset URL
-    router.push('/listings')
-
-    // Reset filter params for API
-    setFilterParams({ limit: 34 })
-
-    // Hide mobile filters
-    setShowMobileFilters(false)
   }
 
   // Count active filters
-  const activeFilterCount = Object.values(localFilters).filter(
+  const activeFilterCount = Object.values(filters).filter(
     (value) => value !== ''
   ).length
 
+  // Background images for the hero section
+  const heroImages = [
+    '/assets/images/listingBG-1.png',
+    '/assets/images/listingBG-2.png',
+    '/assets/images/listingBG-3.png',
+    '/assets/images/listingBG-4.png',
+  ]
+  const [heroImageIndex, setHeroImageIndex] = useState(0)
+
+  // Rotate hero images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroImageIndex((prev) => (prev + 1) % heroImages.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [heroImages.length])
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F1F1F1] overflow-hidden">
-      <Header />
-
       {/* Hero Section */}
       <div className="relative w-full h-[300px] md:h-[400px] bg-gradient-to-r from-gray-900 to-gray-700 flex items-center justify-center">
         <div className="absolute inset-0 z-0">
-          <AnimatePresence initial={false} custom={direction}>
+          <AnimatePresence initial={false}>
             <motion.div
-              key={page}
-              custom={direction}
+              key={heroImageIndex}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute w-full h-full"
             >
               <Image
-                src={houseImages[page] || '/placeholder.svg'}
+                src={heroImages[heroImageIndex] || '/placeholder.svg'}
                 alt="House"
                 fill
                 className="object-cover opacity-40"
@@ -317,7 +178,7 @@ function ListingsContent() {
           </AnimatePresence>
         </div>
         <h1 className="text-3xl md:text-4xl lg:text-5xl text-white font-bold z-10 px-4 text-center">
-          Homes for Sale in Nigeria
+          House for sale in Nigeria
         </h1>
       </div>
 
@@ -340,7 +201,7 @@ function ListingsContent() {
             {searchQuery && (
               <button
                 type="button"
-                onClick={clearSearch}
+                onClick={() => setSearchQuery('')}
                 className="absolute right-[110px] top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 <X className="h-4 w-4" />
@@ -388,9 +249,9 @@ function ListingsContent() {
           <div className="hidden md:flex md:flex-wrap md:gap-2">
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={localFilters.propertyType}
+              value={filters.propertyType}
               onChange={(e) => {
-                setLocalFilters((prev) => ({
+                setFilters((prev) => ({
                   ...prev,
                   propertyType: e.target.value,
                 }))
@@ -404,9 +265,9 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={localFilters.priceRange}
+              value={filters.priceRange}
               onChange={(e) => {
-                setLocalFilters((prev) => ({
+                setFilters((prev) => ({
                   ...prev,
                   priceRange: e.target.value,
                 }))
@@ -422,9 +283,9 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={localFilters.bedrooms}
+              value={filters.bedrooms}
               onChange={(e) => {
-                setLocalFilters((prev) => ({
+                setFilters((prev) => ({
                   ...prev,
                   bedrooms: e.target.value,
                 }))
@@ -439,9 +300,9 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={localFilters.location}
+              value={filters.location}
               onChange={(e) => {
-                setLocalFilters((prev) => ({
+                setFilters((prev) => ({
                   ...prev,
                   location: e.target.value,
                 }))
@@ -455,9 +316,9 @@ function ListingsContent() {
 
             <select
               className="px-3 py-2 border rounded-md text-sm"
-              value={localFilters.moreFilters}
+              value={filters.moreFilters}
               onChange={(e) => {
-                setLocalFilters((prev) => ({
+                setFilters((prev) => ({
                   ...prev,
                   moreFilters: e.target.value,
                 }))
@@ -483,9 +344,9 @@ function ListingsContent() {
             <div className="flex flex-col gap-3 mt-3 md:hidden">
               <select
                 className="px-3 py-2 border rounded-md text-sm w-full"
-                value={localFilters.propertyType}
+                value={filters.propertyType}
                 onChange={(e) => {
-                  setLocalFilters((prev) => ({
+                  setFilters((prev) => ({
                     ...prev,
                     propertyType: e.target.value,
                   }))
@@ -499,9 +360,9 @@ function ListingsContent() {
 
               <select
                 className="px-3 py-2 border rounded-md text-sm w-full"
-                value={localFilters.priceRange}
+                value={filters.priceRange}
                 onChange={(e) => {
-                  setLocalFilters((prev) => ({
+                  setFilters((prev) => ({
                     ...prev,
                     priceRange: e.target.value,
                   }))
@@ -517,9 +378,9 @@ function ListingsContent() {
 
               <select
                 className="px-3 py-2 border rounded-md text-sm w-full"
-                value={localFilters.bedrooms}
+                value={filters.bedrooms}
                 onChange={(e) => {
-                  setLocalFilters((prev) => ({
+                  setFilters((prev) => ({
                     ...prev,
                     bedrooms: e.target.value,
                   }))
@@ -534,9 +395,9 @@ function ListingsContent() {
 
               <select
                 className="px-3 py-2 border rounded-md text-sm w-full"
-                value={localFilters.location}
+                value={filters.location}
                 onChange={(e) => {
-                  setLocalFilters((prev) => ({
+                  setFilters((prev) => ({
                     ...prev,
                     location: e.target.value,
                   }))
@@ -550,9 +411,9 @@ function ListingsContent() {
 
               <select
                 className="px-3 py-2 border rounded-md text-sm w-full"
-                value={localFilters.moreFilters}
+                value={filters.moreFilters}
                 onChange={(e) => {
-                  setLocalFilters((prev) => ({
+                  setFilters((prev) => ({
                     ...prev,
                     moreFilters: e.target.value,
                   }))
@@ -588,17 +449,10 @@ function ListingsContent() {
 
       {/* Property Listings */}
       <div className="flex-grow py-4 px-4 md:py-6">
-        {isLoading ? (
+        {listingsLoading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-[#546B2F]" />
             <span className="ml-2">Loading properties...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-10">
-            <p className="text-red-500">{error}</p>
-            <Button onClick={clearAllFilters} className="mt-4 bg-[#5D0F1D]">
-              Clear Filters
-            </Button>
           </div>
         ) : properties.length === 0 ? (
           <div className="text-center py-10">
@@ -617,16 +471,16 @@ function ListingsContent() {
               </h2>
             </div>
             <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {properties.map((property) => (
-                <PropertyCard
+              {properties.map((property: Property) => (
+                <ApplicantPropertyCard
                   key={property.id || property._id}
                   id={property.id || property._id || ''}
                   name={property.title || property.name || ''}
                   type={property.propertyType}
                   location={property.propertyAddress || property.location || ''}
-                  price={`₦${property.price?.toLocaleString?.() ?? 'N/A'}`}
-                  monthlyPayment={`₦${property.minMonthlyPayment !== undefined ? property.minMonthlyPayment.toLocaleString() : 'N/A'}`}
-                  minDownPaymentPercent={`${property.minDownPaymentPercent !== undefined ? property.minDownPaymentPercent.toLocaleString() : 'N/A'}% Down Payment`}
+                  price={`₦${property.price.toLocaleString()}`}
+                  monthlyPayment={`₦${property.minMonthlyPayment.toLocaleString()}`}
+                  minDownPaymentPercent={`${property.minDownPaymentPercent.toLocaleString()}% Down Payment`}
                   rating={property.rating ?? 0}
                   tags={property.tags || []}
                   imageUrl={
@@ -634,22 +488,57 @@ function ListingsContent() {
                       ? property.images[0]
                       : '/placeholder.jpg'
                   }
-                  onClick={() => handlePropertyClick(property.id || property._id)}
-                  isSaved={false} // Provide a default value or dynamic value
+                  onClick={() =>
+                    handlePropertyClick(property.id || property._id)
+                  }
+                  isSaved={true}
                 />
               ))}
             </div>
           </>
         )}
 
-        {/* View More Button */}
-        <div className="flex justify-center mt-6 md:mt-8">
-          <Button className="bg-[#5D0F1D]" onClick={handleViewMore}>
-            View More
-          </Button>
-        </div>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-8">
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                    className={currentPage === page ? 'bg-[#7C0A02]' : ''}
+                  >
+                    {page}
+                  </Button>
+                )
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Footer */}
       <Footer />
     </div>
   )
