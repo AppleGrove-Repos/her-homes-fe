@@ -12,7 +12,7 @@ export default function MobileMenu() {
 
   const navLinks = [
     { text: 'Properties', href: '/listings' },
-    { text: 'About Us', href: '/apply-for-financing' },
+    { text: 'About Us', href: '/about-us' },
     { text: 'Contact Us', href: '/contact-us' },
   ]
 

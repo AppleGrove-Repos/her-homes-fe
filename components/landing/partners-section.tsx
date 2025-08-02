@@ -221,9 +221,9 @@ export default function PartnersSection() {
                   <img
                     src={feature.img}
                     alt={feature.title}
-                    className="w-10 h-10 object-contain"
+                    className="md:w-10 md:h-10 object-contain h-6 w-6"
                   />
-                  {/* Or use <Image ... /> if you prefer */}
+               
                 </motion.div>
 
                 {/* Content */}
