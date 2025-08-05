@@ -304,7 +304,7 @@ export const useGetUserListings = (params: PropertyFilterParams = {}) => {
 
       // Use the correct endpoint for user listings
       const response = await axios.get(
-        `${API_URL}/listing/user?${queryParams.toString()}`,
+        `${API_URL}/properties/user?${queryParams.toString()}`,
         {
           withCredentials: true,
         }
@@ -449,7 +449,7 @@ export const useToggleFavorite = () => {
       // This is a placeholder - you would need to implement the actual endpoint
       // based on your API structure
       const response = await axios.post(
-        `${API_URL}/listing/${propertyId}/favorite`,
+        `${API_URL}/properties/${propertyId}/favorite`,
         { isFavorite },
         {
           withCredentials: true,

@@ -48,7 +48,7 @@ export default function Header() {
             {/* Navigation Links */}
             <nav className="flex flex-col gap-2 py-6">
               <Link
-                href="/applicant/properties"
+                href="/applicant/listing"
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition"
               >
                 <Home className="text-primary" />
