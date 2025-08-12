@@ -4,7 +4,7 @@ import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation' // ⬅️ Added
 import { useAuth } from '@/lib/store/auth.store'
-import Header from '@/components/applicants/applicant-header'
+import { Header } from '@/components/applicants/applicant-header'
 
 export default function ApplicantDashboardLayout({
   children,
