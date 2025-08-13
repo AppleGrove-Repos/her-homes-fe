@@ -217,9 +217,9 @@ export default function CommunitySection() {
                   <img
                     src={feature.img}
                     alt={feature.title}
-                    className="w-10 h-10 object-contain"
+                    className="md:w-10 md:h-10 object-contain w-6 h-6 md:items-start items-center"
                   />
-                  {/* Or use <Image ... /> if you prefer */}
+               
                 </motion.div>
 
                 {/* Content */}

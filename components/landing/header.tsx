@@ -142,7 +142,7 @@ export default function Header() {
           </div>
 
           <Link
-            href="/apply-for-financing"
+            href="/about-us"
             className="text-sm font-medium hover:text-[#e6a287]"
           >
             About us
