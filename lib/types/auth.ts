@@ -5,6 +5,10 @@ export interface DeveloperSignupData {
   password: string
   role: 'developer'
   companyName: string
+  companyRegistrationNumber: string
+  companyAddress: string
+  certificateOfIncorporation: string // base64
+  companyPortfolio: string // base64
 }
 export type UserRole = 'applicant' | 'developer' | 'admin'
 
@@ -41,4 +45,3 @@ export interface LoginType {
   password: string
   role: string
 }
-  
